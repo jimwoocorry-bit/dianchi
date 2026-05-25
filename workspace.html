@@ -243,43 +243,84 @@
         display: block;
       }
 
-      .frame-wrap {
-        position: relative;
-        width: 100%;
+      .launch-panel {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 360px;
+        gap: 0;
         height: 100%;
         background: #fff;
       }
 
-      iframe {
-        display: block;
-        width: 100%;
-        height: 100%;
-        border: 0;
-        background: #fff;
+      .launch-copy {
+        display: grid;
+        align-content: center;
+        gap: 22px;
+        padding: 56px;
       }
 
-      .frame-fallback {
-        position: absolute;
-        inset: auto 24px 24px 24px;
+      .launch-copy h2 {
+        margin: 0;
+        font-size: 34px;
+        line-height: 1.2;
+      }
+
+      .launch-copy p {
+        max-width: 760px;
+        margin: 0;
+        color: var(--muted);
+        font-size: 16px;
+        line-height: 1.8;
+      }
+
+      .launch-actions {
         display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-        border: 1px solid rgba(15, 23, 42, 0.12);
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .launch-notes {
+        display: grid;
+        gap: 10px;
+        max-width: 820px;
+        margin-top: 8px;
+      }
+
+      .launch-note {
+        border: 1px solid var(--line);
         border-radius: 8px;
         padding: 14px 16px;
-        background: rgba(255, 255, 255, 0.92);
-        box-shadow: 0 18px 60px rgba(15, 23, 42, 0.12);
+        background: #f8fafc;
       }
 
-      .frame-fallback strong {
+      .launch-note strong {
         display: block;
-        margin-bottom: 3px;
+        margin-bottom: 5px;
       }
 
-      .frame-fallback span {
+      .launch-note span {
         color: var(--muted);
-        font-size: 13px;
+        font-size: 14px;
+        line-height: 1.65;
+      }
+
+      .launch-visual {
+        display: grid;
+        align-content: center;
+        gap: 18px;
+        padding: 34px;
+        border-left: 1px solid var(--line);
+        background:
+          linear-gradient(160deg, rgba(31, 111, 235, 0.12), rgba(23, 162, 184, 0.08)),
+          #f6f9ff;
+      }
+
+      .launch-visual strong {
+        font-size: 22px;
+      }
+
+      .launch-visual span {
+        color: var(--muted);
+        line-height: 1.7;
       }
 
       .placeholder {
@@ -387,9 +428,21 @@
           grid-template-columns: 1fr;
         }
 
-        .frame-fallback {
-          position: static;
-          margin: 12px;
+        .launch-panel {
+          grid-template-columns: 1fr;
+        }
+
+        .launch-copy {
+          padding: 28px;
+        }
+
+        .launch-copy h2 {
+          font-size: 28px;
+        }
+
+        .launch-visual {
+          border-left: 0;
+          border-top: 1px solid var(--line);
         }
       }
     </style>
@@ -448,14 +501,31 @@
 
         <section class="content">
           <section class="panel is-active" data-panel="feishu" aria-label="飞书网页版">
-            <div class="frame-wrap">
-              <iframe src="https://www.feishu.cn/messenger" title="飞书网页版"></iframe>
-              <div class="frame-fallback">
-                <div>
-                  <strong>如果右侧区域没有显示飞书</strong>
-                  <span>部分浏览器或飞书策略会限制内嵌页面，点击右侧按钮可在新窗口继续办公。</span>
+            <div class="launch-panel">
+              <div class="launch-copy">
+                <h2>飞书网页版不能直接放进工作台框里</h2>
+                <p>
+                  你刚才看到二维码，是因为飞书网页版在 iframe 里会按自己的网页登录态重新校验。
+                  我们的飞书授权已经让员工进入巅池工作台，但它不会把飞书官网网页登录态注入到内嵌页面里。
+                </p>
+                <div class="launch-actions">
+                  <a class="button primary" href="https://www.feishu.cn/messenger" target="_blank" rel="noreferrer">打开飞书网页版</a>
+                  <a class="button" href="https://www.feishu.cn/" target="_blank" rel="noreferrer">打开飞书首页</a>
                 </div>
-                <a class="button primary" href="https://www.feishu.cn/messenger" target="_blank" rel="noreferrer">打开飞书网页版</a>
+                <div class="launch-notes">
+                  <div class="launch-note">
+                    <strong>正确逻辑</strong>
+                    <span>工作台负责统一身份和内部入口；飞书网页版作为独立办公窗口打开，避免重复扫码和 iframe 登录冲突。</span>
+                  </div>
+                  <div class="launch-note">
+                    <strong>下一步</strong>
+                    <span>DC-Agent、宠物系统、知识库这些我们自己的系统可以继续做成右侧内嵌页面。</span>
+                  </div>
+                </div>
+              </div>
+              <div class="launch-visual">
+                <strong>飞书身份已连接</strong>
+                <span>当前员工身份已经通过飞书验证。点击左侧按钮后，如果浏览器已有飞书登录态，会直接进入飞书网页版；没有登录态时才会按飞书要求登录。</span>
               </div>
             </div>
           </section>
