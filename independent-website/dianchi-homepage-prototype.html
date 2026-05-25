@@ -976,7 +976,7 @@
       </div>
       <div class="nav-actions">
         <a class="link-btn" href="#contact">合作咨询</a>
-        <a class="employee-btn" href="/auth/feishu/start" data-feishu-login>
+        <a class="employee-btn" href="/api/auth/feishu/start" data-feishu-login>
           <span class="qr-icon" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
           员工入口
         </a>
@@ -1101,7 +1101,7 @@
             <img src="../docs/grey_test_video/dianchi-logo-animated.video.loop.svg" alt="巅池文化传媒动态 logo" />
             <h3>飞书扫码进入巅池工作台</h3>
             <p>员工通过飞书身份进入 DC-Agent，查看个人任务、部门协作、知识库与内部通知。</p>
-            <a class="feishu-login-cta" href="/auth/feishu/start" data-feishu-login>
+            <a class="feishu-login-cta" href="/api/auth/feishu/start" data-feishu-login>
               <span class="qr-icon" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
               使用飞书扫码登录
             </a>
@@ -1114,7 +1114,7 @@
         <p>对外展示专业和结果，对内承载协作和成长。巅池文化传媒的主页，应当同时像品牌门面，也像智能组织的入口。</p>
         <div class="contact-actions">
           <a class="primary-cta" href="#services">查看服务能力</a>
-          <a class="secondary-cta" href="/auth/feishu/start" data-feishu-login>员工飞书登录</a>
+          <a class="secondary-cta" href="/api/auth/feishu/start" data-feishu-login>员工飞书登录</a>
         </div>
       </section>
     </main>
@@ -1125,7 +1125,7 @@
         <p>员工入口已接入飞书 OAuth。请通过飞书授权页完成扫码或账号登录。</p>
         <div class="modal-row">
           <div class="fake-qr"></div>
-          <a class="modal-close" href="/auth/feishu/start">进入飞书登录</a>
+          <a class="modal-close" href="/api/auth/feishu/start">进入飞书登录</a>
         </div>
       </div>
     </div>
@@ -1150,7 +1150,7 @@
           const data = await response.json();
           if (!data.logged_in || !data.user) return;
           document.querySelectorAll("[data-feishu-login]").forEach((link) => {
-            link.href = "/auth/logout";
+            link.href = "/api/auth/logout";
             const icon = link.querySelector(".qr-icon");
             link.textContent = data.user.name ? `${data.user.name} · 退出` : "已登录 · 退出";
             if (icon) link.prepend(icon);

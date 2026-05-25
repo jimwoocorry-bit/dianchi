@@ -1,0 +1,16 @@
+{
+  "rewrites": [
+    {
+      "source": "/auth/feishu/start",
+      "destination": "/api/auth/feishu/start"
+    },
+    {
+      "source": "/auth/feishu/callback",
+      "destination": "/api/auth/feishu/callback"
+    },
+    {
+      "source": "/auth/logout",
+      "destination": "/api/auth/logout"
+    }
+  ]
+}
