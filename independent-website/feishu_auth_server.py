@@ -93,9 +93,50 @@ def build_redirect_uri(handler: BaseHTTPRequestHandler) -> str:
     return f"{proto}://{host}/auth/feishu/callback"
 
 
+def _walk_credentials(obj: object) -> list[tuple[str, str]]:
+    pairs: list[tuple[str, str]] = []
+    if isinstance(obj, dict):
+        app_id = str(obj.get("app_id") or "").strip()
+        app_secret = str(obj.get("app_secret") or "").strip()
+        if app_id and app_secret:
+            pairs.append((app_id, app_secret))
+        for value in obj.values():
+            pairs.extend(_walk_credentials(value))
+    elif isinstance(obj, list):
+        for value in obj:
+            pairs.extend(_walk_credentials(value))
+    return pairs
+
+
+def _credentials_from_file() -> tuple[str, str] | None:
+    raw_path = _env("FEISHU_CREDENTIALS_FILE")
+    if not raw_path:
+        return None
+    path = Path(raw_path).expanduser()
+    if not path.is_file():
+        return None
+
+    preferred_app_id = _env("FEISHU_CREDENTIALS_APP_ID") or _env("FEISHU_APP_ID")
+    try:
+        pairs = _walk_credentials(json.loads(path.read_text(encoding="utf-8")))
+    except json.JSONDecodeError:
+        pairs = []
+
+    if preferred_app_id:
+        for app_id, app_secret in pairs:
+            if app_id == preferred_app_id:
+                return app_id, app_secret
+    return pairs[0] if pairs else None
+
+
 def feishu_config() -> tuple[str, str, str]:
     app_id = _env("FEISHU_APP_ID") or _env("LARK_APP_ID")
     app_secret = _env("FEISHU_APP_SECRET") or _env("LARK_APP_SECRET")
+    if not (app_id and app_secret):
+        loaded = _credentials_from_file()
+        if loaded:
+            app_id = app_id or loaded[0]
+            app_secret = app_secret or loaded[1]
     scope = _env("FEISHU_OAUTH_SCOPE", "contact:user.base:readonly")
     return app_id, app_secret, scope
 

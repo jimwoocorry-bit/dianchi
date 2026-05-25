@@ -29,3 +29,10 @@ export SITE_SESSION_SECRET=change-this-to-a-long-random-string
 ```
 
 飞书开发者后台也需要添加同一个重定向 URL。
+
+也可以从本机私有 JSON 配置读取凭证，避免把密钥写进仓库：
+
+```bash
+export FEISHU_CREDENTIALS_FILE=/path/to/private/cmd_config.json
+export FEISHU_CREDENTIALS_APP_ID=cli_xxx
+```
