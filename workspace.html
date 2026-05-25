@@ -243,84 +243,250 @@
         display: block;
       }
 
-      .launch-panel {
+      .message-workbench {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) 360px;
-        gap: 0;
+        grid-template-columns: 332px minmax(0, 1fr);
         height: 100%;
-        background: #fff;
-      }
-
-      .launch-copy {
-        display: grid;
-        align-content: center;
-        gap: 22px;
-        padding: 56px;
-      }
-
-      .launch-copy h2 {
-        margin: 0;
-        font-size: 34px;
-        line-height: 1.2;
-      }
-
-      .launch-copy p {
-        max-width: 760px;
-        margin: 0;
-        color: var(--muted);
-        font-size: 16px;
-        line-height: 1.8;
-      }
-
-      .launch-actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-      }
-
-      .launch-notes {
-        display: grid;
-        gap: 10px;
-        max-width: 820px;
-        margin-top: 8px;
-      }
-
-      .launch-note {
-        border: 1px solid var(--line);
-        border-radius: 8px;
-        padding: 14px 16px;
         background: #f8fafc;
       }
 
-      .launch-note strong {
-        display: block;
-        margin-bottom: 5px;
+      .message-list {
+        min-width: 0;
+        border-right: 1px solid #cfd8e6;
+        background: #fff;
+        overflow: hidden;
       }
 
-      .launch-note span {
+      .message-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 58px;
+        padding: 0 18px;
+        border-bottom: 1px solid #edf1f6;
+      }
+
+      .message-head strong {
+        font-size: 20px;
+      }
+
+      .message-head span {
         color: var(--muted);
-        font-size: 14px;
-        line-height: 1.65;
+        font-size: 13px;
       }
 
-      .launch-visual {
+      .quick-apps {
         display: grid;
-        align-content: center;
-        gap: 18px;
-        padding: 34px;
-        border-left: 1px solid var(--line);
-        background:
-          linear-gradient(160deg, rgba(31, 111, 235, 0.12), rgba(23, 162, 184, 0.08)),
-          #f6f9ff;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        padding: 14px 18px 16px;
+        border-bottom: 1px solid #edf1f6;
       }
 
-      .launch-visual strong {
-        font-size: 22px;
+      .quick-app {
+        display: grid;
+        justify-items: center;
+        gap: 7px;
+        min-width: 0;
+        color: #475569;
+        font-size: 12px;
       }
 
-      .launch-visual span {
+      .quick-app img,
+      .quick-app i {
+        display: grid;
+        place-items: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        background: #edf5ff;
+        color: var(--accent);
+        font-style: normal;
+        font-weight: 900;
+      }
+
+      .quick-app img {
+        object-fit: contain;
+        padding: 5px;
+      }
+
+      .conversation-scroll {
+        height: calc(100% - 133px);
+        overflow: auto;
+        padding: 8px;
+      }
+
+      .conversation {
+        position: relative;
+        display: grid;
+        grid-template-columns: 44px minmax(0, 1fr) auto;
+        gap: 10px;
+        align-items: center;
+        min-height: 68px;
+        border-radius: 8px;
+        padding: 10px;
+        color: inherit;
+      }
+
+      .conversation.is-active,
+      .conversation:hover {
+        background: #eef2f7;
+      }
+
+      .avatar {
+        position: relative;
+        display: grid;
+        place-items: center;
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        background: #e7f0ff;
+        color: #1f6feb;
+        font-size: 13px;
+        font-weight: 900;
+      }
+
+      .avatar img {
+        width: 100%;
+        height: 100%;
+        border-radius: inherit;
+        object-fit: contain;
+        padding: 4px;
+      }
+
+      .badge {
+        position: absolute;
+        top: -4px;
+        right: -4px;
+        display: grid;
+        place-items: center;
+        min-width: 18px;
+        height: 18px;
+        border-radius: 99px;
+        padding: 0 5px;
+        background: #ef4444;
+        color: #fff;
+        font-size: 11px;
+        font-weight: 900;
+      }
+
+      .conv-main {
+        min-width: 0;
+      }
+
+      .conv-title {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        min-width: 0;
+        font-weight: 800;
+      }
+
+      .conv-title span:first-child {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .tag {
+        flex: 0 0 auto;
+        border-radius: 4px;
+        padding: 1px 4px;
+        background: #fef3c7;
+        color: #9a5b00;
+        font-size: 11px;
+        font-weight: 800;
+      }
+
+      .tag.blue {
+        background: #dbeafe;
+        color: #1d4ed8;
+      }
+
+      .conv-preview {
+        overflow: hidden;
+        margin-top: 5px;
+        color: #8a94a6;
+        font-size: 13px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .conv-time {
+        align-self: start;
+        padding-top: 4px;
+        color: #8a94a6;
+        font-size: 12px;
+        white-space: nowrap;
+      }
+
+      .message-detail {
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        min-width: 0;
+        background: #f8fafc;
+      }
+
+      .detail-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 58px;
+        padding: 0 22px;
+        border-bottom: 1px solid #e5ebf3;
+        background: #fff;
+      }
+
+      .detail-head strong {
+        font-size: 18px;
+      }
+
+      .detail-head span {
         color: var(--muted);
-        line-height: 1.7;
+        font-size: 13px;
+      }
+
+      .detail-empty {
+        display: grid;
+        place-items: center;
+        padding: 34px;
+      }
+
+      .empty-inner {
+        display: grid;
+        justify-items: center;
+        gap: 18px;
+        color: #667085;
+        text-align: center;
+      }
+
+      .empty-mark {
+        display: grid;
+        place-items: center;
+        width: 96px;
+        height: 96px;
+        border-radius: 32px;
+        background: linear-gradient(135deg, #e0f2fe, #eef2ff);
+        color: #1f6feb;
+        font-size: 28px;
+        font-weight: 900;
+      }
+
+      .detail-foot {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        min-height: 66px;
+        padding: 12px 18px;
+        border-top: 1px solid #e5ebf3;
+        background: #fff;
+      }
+
+      .detail-foot span {
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.6;
       }
 
       .placeholder {
@@ -428,21 +594,21 @@
           grid-template-columns: 1fr;
         }
 
-        .launch-panel {
+        .message-workbench {
           grid-template-columns: 1fr;
         }
 
-        .launch-copy {
-          padding: 28px;
+        .message-list {
+          border-right: 0;
+          border-bottom: 1px solid var(--line);
         }
 
-        .launch-copy h2 {
-          font-size: 28px;
+        .conversation-scroll {
+          max-height: 360px;
         }
 
-        .launch-visual {
-          border-left: 0;
-          border-top: 1px solid var(--line);
+        .message-detail {
+          min-height: 420px;
         }
       }
     </style>
@@ -464,8 +630,8 @@
         <nav class="nav-group" aria-label="工作台导航">
           <div class="nav-title">工作入口</div>
           <button class="nav-item is-active" type="button" data-tab="feishu">
-            <span class="nav-mark">F</span>
-            飞书网页版
+            <span class="nav-mark">M</span>
+            消息
           </button>
           <button class="nav-item" type="button" data-tab="agent">
             <span class="nav-mark">AI</span>
@@ -490,8 +656,8 @@
       <main class="main">
         <header class="topbar">
           <div>
-            <h1 data-panel-title>飞书网页版</h1>
-            <p data-panel-desc>在巅池工作台内处理消息、文档、日程和协作。</p>
+            <h1 data-panel-title>消息</h1>
+            <p data-panel-desc>聚合飞书机器人通知、内部群消息和 DC-Agent 工作提醒。</p>
           </div>
           <div class="top-actions">
             <span class="status-dot">飞书身份已连接</span>
@@ -500,32 +666,105 @@
         </header>
 
         <section class="content">
-          <section class="panel is-active" data-panel="feishu" aria-label="飞书网页版">
-            <div class="launch-panel">
-              <div class="launch-copy">
-                <h2>飞书网页版不能直接放进工作台框里</h2>
-                <p>
-                  你刚才看到二维码，是因为飞书网页版在 iframe 里会按自己的网页登录态重新校验。
-                  我们的飞书授权已经让员工进入巅池工作台，但它不会把飞书官网网页登录态注入到内嵌页面里。
-                </p>
-                <div class="launch-actions">
-                  <a class="button primary" href="https://www.feishu.cn/messenger" target="_blank" rel="noreferrer">打开飞书网页版</a>
-                  <a class="button" href="https://www.feishu.cn/" target="_blank" rel="noreferrer">打开飞书首页</a>
+          <section class="panel is-active" data-panel="feishu" aria-label="消息">
+            <div class="message-workbench">
+              <div class="message-list">
+                <div class="message-head">
+                  <strong>消息</strong>
+                  <span>巅池工作台</span>
                 </div>
-                <div class="launch-notes">
-                  <div class="launch-note">
-                    <strong>正确逻辑</strong>
-                    <span>工作台负责统一身份和内部入口；飞书网页版作为独立办公窗口打开，避免重复扫码和 iframe 登录冲突。</span>
+                <div class="quick-apps">
+                  <div class="quick-app">
+                    <img src="docs/grey_test_video/dianchi-logo-animated.video.loop.svg" alt="" />
+                    <span>DC-Agent</span>
                   </div>
-                  <div class="launch-note">
-                    <strong>下一步</strong>
-                    <span>DC-Agent、宠物系统、知识库这些我们自己的系统可以继续做成右侧内嵌页面。</span>
+                  <div class="quick-app">
+                    <i>AI</i>
+                    <span>飞书 aPaaS</span>
+                  </div>
+                  <div class="quick-app">
+                    <i>P</i>
+                    <span>宠物系统</span>
+                  </div>
+                </div>
+                <div class="conversation-scroll">
+                  <div class="conversation is-active">
+                    <div class="avatar">安<span class="badge">2</span></div>
+                    <div class="conv-main">
+                      <div class="conv-title"><span>账号安全中心</span><span class="tag">机器人</span></div>
+                      <div class="conv-preview">授权操作通知</div>
+                    </div>
+                    <div class="conv-time">刚刚</div>
+                  </div>
+                  <div class="conversation">
+                    <div class="avatar">开<span class="badge">1</span></div>
+                    <div class="conv-main">
+                      <div class="conv-title"><span>开发者小助手</span><span class="tag">机器人</span></div>
+                      <div class="conv-preview">应用审批通过，已发布成功</div>
+                    </div>
+                    <div class="conv-time">22:21</div>
+                  </div>
+                  <div class="conversation">
+                    <div class="avatar"><img src="docs/grey_test_video/dianchi-logo-animated.video.loop.svg" alt="" /></div>
+                    <div class="conv-main">
+                      <div class="conv-title"><span>巅池-Agent小助手</span><span class="tag">机器人</span></div>
+                      <div class="conv-preview">小楠吃饱了一点</div>
+                    </div>
+                    <div class="conv-time">16:45</div>
+                  </div>
+                  <div class="conversation">
+                    <div class="avatar">群</div>
+                    <div class="conv-main">
+                      <div class="conv-title"><span>广西巅池文化传媒有限公司</span><span class="tag blue">全员</span></div>
+                      <div class="conv-preview">肖媛：OK</div>
+                    </div>
+                    <div class="conv-time">16:20</div>
+                  </div>
+                  <div class="conversation">
+                    <div class="avatar"><img src="docs/grey_test_video/dianchi-logo-animated.video.loop.svg" alt="" /></div>
+                    <div class="conv-main">
+                      <div class="conv-title"><span>巅池-技术</span><span class="tag">机器人</span></div>
+                      <div class="conv-preview">DC-Agent: feishu_sync_heartbeat 异常</div>
+                    </div>
+                    <div class="conv-time">15:10</div>
+                  </div>
+                  <div class="conversation">
+                    <div class="avatar">蔡</div>
+                    <div class="conv-main">
+                      <div class="conv-title"><span>蔡挺</span></div>
+                      <div class="conv-preview">/pet</div>
+                    </div>
+                    <div class="conv-time">13:40</div>
+                  </div>
+                  <div class="conversation">
+                    <div class="avatar">服</div>
+                    <div class="conv-main">
+                      <div class="conv-title"><span>服务台</span><span class="tag">机器人</span></div>
+                      <div class="conv-preview">申请使用外部服务台已通过</div>
+                    </div>
+                    <div class="conv-time">11:25</div>
                   </div>
                 </div>
               </div>
-              <div class="launch-visual">
-                <strong>飞书身份已连接</strong>
-                <span>当前员工身份已经通过飞书验证。点击左侧按钮后，如果浏览器已有飞书登录态，会直接进入飞书网页版；没有登录态时才会按飞书要求登录。</span>
+              <div class="message-detail">
+                <div class="detail-head">
+                  <div>
+                    <strong>巅池消息中心</strong>
+                    <span>后续接入飞书事件、机器人通知和内部任务</span>
+                  </div>
+                  <a class="button" href="https://www.feishu.cn/messenger" target="_blank" rel="noreferrer">打开完整飞书</a>
+                </div>
+                <div class="detail-empty">
+                  <div class="empty-inner">
+                    <div class="empty-mark">DC</div>
+                    <strong>今天也辛苦啦，飞书陪你一起努力</strong>
+                    <span>这里会显示选中会话的内容、DC-Agent 任务提醒和宠物系统互动记录。</span>
+                  </div>
+                </div>
+                <div class="detail-foot">
+                  <span>当前是工作台消息面板原型，不再触发飞书 iframe 二次扫码。</span>
+                  <a class="button primary" href="https://www.feishu.cn/messenger" target="_blank" rel="noreferrer">进入飞书网页版</a>
+                </div>
               </div>
             </div>
           </section>
@@ -571,7 +810,7 @@
 
     <script>
       const panelText = {
-        feishu: ["飞书网页版", "在巅池工作台内处理消息、文档、日程和协作。"],
+        feishu: ["消息", "聚合飞书机器人通知、内部群消息和 DC-Agent 工作提醒。"],
         agent: ["DC-Agent", "把日常工作流交给公司的智能生产系统承接。"],
         pet: ["宠物系统", "把团队陪伴、任务激励和家文化做成更轻的日常入口。"],
         knowledge: ["知识库", "沉淀项目、客户、流程和案例复盘。"],
