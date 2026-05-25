@@ -1150,9 +1150,9 @@
           const data = await response.json();
           if (!data.logged_in || !data.user) return;
           document.querySelectorAll("[data-feishu-login]").forEach((link) => {
-            link.href = "/api/auth/logout";
+            link.href = "/workspace.html";
             const icon = link.querySelector(".qr-icon");
-            link.textContent = data.user.name ? `${data.user.name} · 退出` : "已登录 · 退出";
+            link.textContent = data.user.name ? `${data.user.name} · 工作台` : "进入工作台";
             if (icon) link.prepend(icon);
           });
         } catch {

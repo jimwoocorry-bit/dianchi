@@ -80,5 +80,5 @@ class handler(BaseHTTPRequestHandler):
             "Set-Cookie",
             set_cookie_header(SESSION_COOKIE, session, max_age=SESSION_MAX_AGE),
         )
-        self.send_header("Location", "/?login=success")
+        self.send_header("Location", "/workspace.html?login=success")
         self.end_headers()
