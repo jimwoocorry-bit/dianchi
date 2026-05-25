@@ -1,0 +1,6 @@
+.DS_Store
+__pycache__/
+*.pyc
+.env
+*.env
+!independent-website/feishu-auth.env.example
