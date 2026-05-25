@@ -4,3 +4,5 @@ __pycache__/
 .env
 *.env
 !independent-website/feishu-auth.env.example
+.vercel
+.playwright-cli/
