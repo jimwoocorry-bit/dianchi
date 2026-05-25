@@ -83,11 +83,28 @@ def clear_cookie_header(name: str) -> str:
     return f"{name}=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax; Secure"
 
 
-def feishu_config() -> tuple[str, str, str]:
-    app_id = env("FEISHU_APP_ID") or env("LARK_APP_ID")
-    app_secret = env("FEISHU_APP_SECRET") or env("LARK_APP_SECRET")
+FEISHU_APP_KEYS = ("promo", "tech", "agent")
+
+
+def default_app_key() -> str:
+    key = env("FEISHU_DEFAULT_APP", "promo").lower()
+    return key if key in FEISHU_APP_KEYS else "promo"
+
+
+def feishu_config(app_key: str | None = None) -> tuple[str, str, str, str]:
+    key = (app_key or default_app_key()).lower()
+    if key not in FEISHU_APP_KEYS:
+        key = default_app_key()
+
+    prefix = f"FEISHU_{key.upper()}_"
+    app_id = env(prefix + "APP_ID")
+    app_secret = env(prefix + "APP_SECRET")
+    if key == "promo":
+        app_id = app_id or env("FEISHU_APP_ID") or env("LARK_APP_ID")
+        app_secret = app_secret or env("FEISHU_APP_SECRET") or env("LARK_APP_SECRET")
+
     scope = env("FEISHU_OAUTH_SCOPE", "contact:user.base:readonly")
-    return app_id, app_secret, scope
+    return key, app_id, app_secret, scope
 
 
 def request_json(url: str, *, method: str, headers: dict, body: dict | None = None) -> dict:
@@ -104,8 +121,8 @@ def request_json(url: str, *, method: str, headers: dict, body: dict | None = No
         raise RuntimeError(f"Feishu HTTP {exc.code}: {raw}") from exc
 
 
-def exchange_code(code: str, redirect_uri: str) -> dict:
-    app_id, app_secret, scope = feishu_config()
+def exchange_code(code: str, redirect_uri: str, app_key: str | None = None) -> dict:
+    _key, app_id, app_secret, scope = feishu_config(app_key)
     payload = {
         "grant_type": "authorization_code",
         "client_id": app_id,

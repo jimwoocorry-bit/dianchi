@@ -64,7 +64,7 @@ class handler(BaseHTTPRequestHandler):
             return
 
         try:
-            token_data = exchange_code(code, redirect_uri(self))
+            token_data = exchange_code(code, redirect_uri(self), payload.get("app"))
             user = public_user(fetch_user_info(token_data["access_token"]))
         except Exception as exc:  # noqa: BLE001
             render_message(self, "飞书登录失败", str(exc))

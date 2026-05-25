@@ -8,8 +8,10 @@ from http.server import BaseHTTPRequestHandler
 
 from api._feishu import (
     FEISHU_AUTHORIZE_URL,
+    FEISHU_APP_KEYS,
     STATE_COOKIE,
     STATE_MAX_AGE,
+    default_app_key,
     env,
     feishu_config,
     set_cookie_header,
@@ -28,11 +30,14 @@ def redirect_uri(handler: BaseHTTPRequestHandler) -> str:
 
 class handler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:
-        app_id, app_secret, scope = feishu_config()
+        query = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+        requested_app = query.get("app", [""])[0].lower()
+        app_key = requested_app if requested_app in FEISHU_APP_KEYS else default_app_key()
+        _key, app_id, app_secret, scope = feishu_config(app_key)
         if not app_id or not app_secret:
             body = (
                 "Feishu login is not configured. "
-                "Set FEISHU_APP_ID and FEISHU_APP_SECRET in Vercel environment variables."
+                f"Set credentials for Feishu app '{app_key}' in Vercel environment variables."
             ).encode("utf-8")
             self.send_response(HTTPStatus.SERVICE_UNAVAILABLE)
             self.send_header("Content-Type", "text/plain; charset=utf-8")
@@ -57,7 +62,9 @@ class handler(BaseHTTPRequestHandler):
             "Set-Cookie",
             set_cookie_header(
                 STATE_COOKIE,
-                sign_payload({"state": state, "iat": int(time.time())}),
+                sign_payload(
+                    {"state": state, "app": app_key, "iat": int(time.time())}
+                ),
                 max_age=STATE_MAX_AGE,
             ),
         )
