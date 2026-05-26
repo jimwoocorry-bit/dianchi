@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>巅池管理后台 | DC-Agent</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #111827;
+        --muted: #64748b;
+        --line: #dbe3ee;
+        --panel: #ffffff;
+        --soft: #f5f7fb;
+        --accent: #1f6feb;
+        --ok: #0f766e;
+        --warn: #92400e;
+        --danger: #991b1b;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: Inter, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+        background: #eef3f8;
+        color: var(--ink);
+      }
+      .admin-shell {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 24px;
+      }
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--line);
+      }
+      header h1 {
+        margin: 0;
+        font-size: 26px;
+      }
+      header .subtitle {
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .user-badge {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 14px;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        font-size: 13px;
+      }
+      .user-badge .role {
+        padding: 2px 8px;
+        background: #fef3c7;
+        color: var(--warn);
+        border-radius: 4px;
+        font-weight: 700;
+        font-size: 11px;
+      }
+      .user-badge .role.admin {
+        background: #ecfdf5;
+        color: var(--ok);
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 16px;
+      }
+      .card {
+        padding: 18px;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+      }
+      .card h2 {
+        margin: 0 0 10px;
+        font-size: 16px;
+      }
+      .card .num {
+        font-size: 28px;
+        font-weight: 800;
+        color: var(--ink);
+      }
+      .card .desc {
+        margin-top: 6px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .card.placeholder {
+        background: #fafbfc;
+        border-style: dashed;
+        color: var(--muted);
+      }
+      .access-deny {
+        max-width: 480px;
+        margin: 80px auto;
+        padding: 32px 36px;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        text-align: center;
+      }
+      .access-deny h2 {
+        margin: 0 0 8px;
+        color: var(--danger);
+      }
+      .access-deny p {
+        margin: 8px 0;
+        color: var(--muted);
+        line-height: 1.7;
+      }
+      .access-deny a {
+        display: inline-block;
+        margin-top: 14px;
+        padding: 10px 18px;
+        background: var(--accent);
+        color: #fff;
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root">
+      <div class="admin-shell" data-admin-hidden style="display:none">
+        <header>
+          <div>
+            <h1>巅池管理后台</h1>
+            <div class="subtitle">M1 v0 · 企业养成 SaaS 控制台（开发中）</div>
+          </div>
+          <div class="user-badge">
+            <span data-user-name>—</span>
+            <span class="role admin">ADMIN</span>
+          </div>
+        </header>
+
+        <div class="grid">
+          <div class="card">
+            <h2>商品总数</h2>
+            <div class="num" data-stat-items>—</div>
+            <div class="desc">主角色 + mini 宠物</div>
+          </div>
+          <div class="card">
+            <h2>员工总数（M3 接入）</h2>
+            <div class="num" data-stat-users>—</div>
+            <div class="desc">已注册并登录过桌面端的员工</div>
+          </div>
+          <div class="card">
+            <h2>金币流水（M3 接入）</h2>
+            <div class="num" data-stat-flow>—</div>
+            <div class="desc">最近 7 天的购买 / 试用 / 奖励</div>
+          </div>
+          <div class="card placeholder">
+            <h2>商品配置（M2 实装）</h2>
+            <div class="desc">商品上下架、调价、好感度门槛、试用规则。当前商品定义在 <code>api/_shop_catalog.py</code> 硬编码。</div>
+          </div>
+          <div class="card placeholder">
+            <h2>员工金币管理（M3 实装）</h2>
+            <div class="desc">查看 / 编辑某员工的钱包；批量发节日礼包。</div>
+          </div>
+          <div class="card placeholder">
+            <h2>任务规则（M4 实装）</h2>
+            <div class="desc">完成周报 +50 金币、完成 OKR +500 金币、连续签到等。接 DC-Agent / 飞书 webhook。</div>
+          </div>
+          <div class="card placeholder">
+            <h2>活跃度看板（M3 实装）</h2>
+            <div class="desc">谁今天养宠最勤、谁买得最多、试用转化率…</div>
+          </div>
+          <div class="card placeholder">
+            <h2>系统设置（M3 实装）</h2>
+            <div class="desc">默认初始金币、试用折扣、admin 名单。</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="admin-shell" data-loading style="display:none">
+        <p style="text-align:center;color:var(--muted);padding:80px 0">校验飞书身份中…</p>
+      </div>
+
+      <div class="access-deny" data-deny style="display:none">
+        <h2>无权访问</h2>
+        <p data-deny-reason>需要管理员权限。</p>
+        <a href="/workspace.html">返回工作台</a>
+      </div>
+    </div>
+
+    <script>
+      const $ = (sel) => document.querySelector(sel);
+      const show = (sel) => ($(sel).style.display = "");
+      const hide = (sel) => ($(sel).style.display = "none");
+
+      show("[data-loading]");
+
+      (async () => {
+        try {
+          const me = await fetch("/api/me", { credentials: "same-origin" }).then((r) => r.json());
+          if (!me.logged_in || !me.user) {
+            window.location.href = "/api/auth/feishu/start?app=agent";
+            return;
+          }
+
+          // 试请求一个 admin-only endpoint（M1 还没建专属，先用 /api/shop 验证有效登录）
+          // 真正的 admin 校验等 /api/admin/* 加上去后再做
+          const shopResp = await fetch("/api/shop", { credentials: "same-origin" });
+          if (shopResp.status === 403) {
+            hide("[data-loading]");
+            show("[data-deny]");
+            $("[data-deny-reason]").textContent =
+              "你不在管理员白名单。当前 M1 v0 admin = 蔡挺。后续 M3 实装管理员管理。";
+            return;
+          }
+          if (!shopResp.ok) {
+            throw new Error("shop API failed: " + shopResp.status);
+          }
+          const shop = await shopResp.json();
+
+          hide("[data-loading]");
+          show("[data-admin-hidden]");
+          $("[data-user-name]").textContent = me.user.name || me.user.open_id;
+          $("[data-stat-items]").textContent = shop.items.length;
+          $("[data-stat-users]").textContent = "—";
+          $("[data-stat-flow]").textContent = "—";
+        } catch (e) {
+          hide("[data-loading]");
+          show("[data-deny]");
+          $("[data-deny-reason]").textContent = "加载出错：" + e.message;
+        }
+      })();
+    </script>
+  </body>
+</html>
