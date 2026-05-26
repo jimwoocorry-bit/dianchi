@@ -553,6 +553,333 @@
         background: var(--ok);
       }
 
+      .conversation-empty {
+        padding: 24px 18px;
+        color: var(--muted);
+        font-size: 13px;
+        text-align: center;
+      }
+
+      .conversation {
+        cursor: pointer;
+        border: 0;
+        font: inherit;
+        text-align: left;
+      }
+
+      .persistent-pill {
+        display: inline-flex;
+        align-items: center;
+        height: 24px;
+        padding: 0 10px;
+        border-radius: 99px;
+        background: #ecfdf5;
+        color: var(--ok);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .persistent-pill.ephemeral {
+        background: #fef3c7;
+        color: #9a5b00;
+      }
+
+      .message-stream {
+        min-height: 0;
+        overflow-y: auto;
+        padding: 20px 22px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        background: #f8fafc;
+      }
+
+      .message-stream .empty {
+        margin: auto;
+        color: #94a3b8;
+        font-size: 13px;
+      }
+
+      .bubble {
+        max-width: 72%;
+        padding: 10px 14px;
+        border-radius: 14px;
+        font-size: 14px;
+        line-height: 1.55;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+
+      .bubble.user {
+        align-self: flex-end;
+        background: var(--accent);
+        color: #fff;
+        border-bottom-right-radius: 4px;
+      }
+
+      .bubble.assistant {
+        align-self: flex-start;
+        background: #fff;
+        color: var(--ink);
+        border: 1px solid #e2e8f0;
+        border-bottom-left-radius: 4px;
+      }
+
+      .bubble-meta {
+        margin-top: 6px;
+        color: rgba(255, 255, 255, 0.78);
+        font-size: 11px;
+      }
+
+      .bubble.assistant .bubble-meta {
+        color: #94a3b8;
+      }
+
+      .bubble.user .bubble-meta {
+        text-align: right;
+      }
+
+      .message-input {
+        display: flex;
+        gap: 10px;
+        align-items: flex-end;
+        padding: 12px 18px;
+        border-top: 1px solid #e5ebf3;
+        background: #fff;
+      }
+
+      .message-input textarea {
+        flex: 1;
+        min-height: 44px;
+        max-height: 140px;
+        resize: none;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 11px 12px;
+        font: inherit;
+        line-height: 1.5;
+        color: var(--ink);
+        background: #f8fafc;
+        outline: none;
+      }
+
+      .message-input textarea:focus {
+        border-color: var(--accent);
+        background: #fff;
+      }
+
+      .message-input textarea:disabled {
+        cursor: not-allowed;
+        background: #eef2f7;
+      }
+
+      .send-button {
+        min-width: 84px;
+        height: 44px;
+        border: 0;
+        border-radius: 8px;
+        background: var(--accent);
+        color: #fff;
+        font: inherit;
+        font-weight: 800;
+        cursor: pointer;
+      }
+
+      .send-button:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+
+      .panel-stack {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+      }
+
+      .panel-stack > .message-workbench {
+        flex: 1 1 auto;
+        min-height: 0;
+      }
+
+      .message-notice {
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 18px;
+        background: #eff6ff;
+        border-bottom: 1px solid #bfdbfe;
+        color: #1e3a8a;
+        font-size: 13px;
+        line-height: 1.55;
+      }
+
+      .message-notice strong {
+        font-weight: 800;
+      }
+
+      .message-notice a {
+        flex: 0 0 auto;
+        margin-left: auto;
+        color: #1e3a8a;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 12px;
+        padding: 5px 12px;
+        border: 1px solid #93c5fd;
+        border-radius: 6px;
+        white-space: nowrap;
+      }
+
+      .message-notice a:hover {
+        background: #dbeafe;
+      }
+
+      .feishu-frame-panel {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        background: #fff;
+      }
+
+      .feishu-frame-bar {
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 18px;
+        border-bottom: 1px solid #e2e8f0;
+        background: #fafbfc;
+        font-size: 13px;
+        color: #475569;
+      }
+
+      .feishu-frame-bar [data-bridge-hint] {
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .bridge-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 3px 10px;
+        border-radius: 99px;
+        font-size: 12px;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+
+      .bridge-pill::before {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-radius: 99px;
+        background: currentColor;
+      }
+
+      .bridge-pill.ok {
+        background: #ecfdf5;
+        color: var(--ok);
+      }
+
+      .bridge-pill.warn {
+        background: #fef3c7;
+        color: #92400e;
+      }
+
+      .frame-actions {
+        display: flex;
+        gap: 8px;
+        flex: 0 0 auto;
+      }
+
+      .frame-actions a {
+        color: #475569;
+        text-decoration: none;
+        font-size: 12px;
+        padding: 4px 10px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+
+      .frame-actions a:hover {
+        background: #f1f5f9;
+      }
+
+      .feishu-frame {
+        flex: 1 1 auto;
+        width: 100%;
+        border: 0;
+        background: #fff;
+        display: block;
+      }
+
+      .feishu-frame[hidden] {
+        display: none;
+      }
+
+      .bridge-prompt {
+        flex: 1 1 auto;
+        display: grid;
+        place-items: center;
+        padding: 32px;
+        background: #fafbfc;
+      }
+
+      .bridge-prompt[hidden] {
+        display: none;
+      }
+
+      .bridge-prompt .card {
+        max-width: 620px;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 30px 36px;
+        box-shadow: 0 4px 24px rgba(15, 23, 42, 0.04);
+      }
+
+      .bridge-prompt h2 {
+        margin: 0 0 10px;
+        font-size: 21px;
+        line-height: 1.4;
+      }
+
+      .bridge-prompt p {
+        margin: 0 0 14px;
+        color: var(--muted);
+        line-height: 1.75;
+      }
+
+      .bridge-prompt ol {
+        margin: 14px 0 18px;
+        padding-left: 22px;
+        color: #334155;
+        line-height: 2;
+      }
+
+      .bridge-prompt code {
+        background: #f1f5f9;
+        color: #0f172a;
+        padding: 1px 6px;
+        border-radius: 4px;
+        font-size: 13px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+
+      .bridge-prompt .actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 18px;
+        flex-wrap: wrap;
+      }
+
       @media (max-width: 900px) {
         .workspace-shell {
           grid-template-columns: 1fr;
@@ -645,6 +972,10 @@
             <span class="nav-mark">K</span>
             知识库
           </button>
+          <button class="nav-item" type="button" data-tab="drive">
+            <span class="nav-mark">D</span>
+            云文档
+          </button>
         </nav>
 
         <div class="sidebar-footer">
@@ -667,11 +998,16 @@
 
         <section class="content">
           <section class="panel is-active" data-panel="feishu" aria-label="消息">
-            <div class="message-workbench">
+            <div class="panel-stack">
+              <div class="message-notice">
+                <span>💬 这里是 <strong>工作台内部消息中心</strong>（mock + DC-Agent 工作流提醒）。要看真实飞书消息（账号安全 / 群聊 / 直接消息），请用<strong>飞书桌面端</strong>。</span>
+                <a href="https://www.feishu.cn/messenger" target="_blank" rel="noreferrer">新窗口打开飞书 ↗</a>
+              </div>
+              <div class="message-workbench">
               <div class="message-list">
                 <div class="message-head">
                   <strong>消息</strong>
-                  <span>巅池工作台</span>
+                  <span data-message-persistence class="persistent-pill ephemeral">连接中…</span>
                 </div>
                 <div class="quick-apps">
                   <div class="quick-app">
@@ -687,85 +1023,31 @@
                     <span>宠物系统</span>
                   </div>
                 </div>
-                <div class="conversation-scroll">
-                  <div class="conversation is-active">
-                    <div class="avatar">安<span class="badge">2</span></div>
-                    <div class="conv-main">
-                      <div class="conv-title"><span>账号安全中心</span><span class="tag">机器人</span></div>
-                      <div class="conv-preview">授权操作通知</div>
-                    </div>
-                    <div class="conv-time">刚刚</div>
-                  </div>
-                  <div class="conversation">
-                    <div class="avatar">开<span class="badge">1</span></div>
-                    <div class="conv-main">
-                      <div class="conv-title"><span>开发者小助手</span><span class="tag">机器人</span></div>
-                      <div class="conv-preview">应用审批通过，已发布成功</div>
-                    </div>
-                    <div class="conv-time">22:21</div>
-                  </div>
-                  <div class="conversation">
-                    <div class="avatar"><img src="docs/grey_test_video/dianchi-logo-animated.video.loop.svg" alt="" /></div>
-                    <div class="conv-main">
-                      <div class="conv-title"><span>巅池-Agent小助手</span><span class="tag">机器人</span></div>
-                      <div class="conv-preview">小楠吃饱了一点</div>
-                    </div>
-                    <div class="conv-time">16:45</div>
-                  </div>
-                  <div class="conversation">
-                    <div class="avatar">群</div>
-                    <div class="conv-main">
-                      <div class="conv-title"><span>广西巅池文化传媒有限公司</span><span class="tag blue">全员</span></div>
-                      <div class="conv-preview">肖媛：OK</div>
-                    </div>
-                    <div class="conv-time">16:20</div>
-                  </div>
-                  <div class="conversation">
-                    <div class="avatar"><img src="docs/grey_test_video/dianchi-logo-animated.video.loop.svg" alt="" /></div>
-                    <div class="conv-main">
-                      <div class="conv-title"><span>巅池-技术</span><span class="tag">机器人</span></div>
-                      <div class="conv-preview">DC-Agent: feishu_sync_heartbeat 异常</div>
-                    </div>
-                    <div class="conv-time">15:10</div>
-                  </div>
-                  <div class="conversation">
-                    <div class="avatar">蔡</div>
-                    <div class="conv-main">
-                      <div class="conv-title"><span>蔡挺</span></div>
-                      <div class="conv-preview">/pet</div>
-                    </div>
-                    <div class="conv-time">13:40</div>
-                  </div>
-                  <div class="conversation">
-                    <div class="avatar">服</div>
-                    <div class="conv-main">
-                      <div class="conv-title"><span>服务台</span><span class="tag">机器人</span></div>
-                      <div class="conv-preview">申请使用外部服务台已通过</div>
-                    </div>
-                    <div class="conv-time">11:25</div>
-                  </div>
+                <div class="conversation-scroll" data-conversation-list>
+                  <div class="conversation-empty">加载会话中…</div>
                 </div>
               </div>
               <div class="message-detail">
                 <div class="detail-head">
                   <div>
-                    <strong>巅池消息中心</strong>
-                    <span>后续接入飞书事件、机器人通知和内部任务</span>
+                    <strong data-detail-title>巅池消息中心</strong>
+                    <span data-detail-sub>选择左侧会话查看消息。</span>
                   </div>
-                  <a class="button" href="https://www.feishu.cn/messenger" target="_blank" rel="noreferrer">打开完整飞书</a>
+                  <a class="button" href="https://www.feishu.cn/messenger" target="_blank" rel="noreferrer">新窗口打开飞书</a>
                 </div>
-                <div class="detail-empty">
-                  <div class="empty-inner">
-                    <div class="empty-mark">DC</div>
-                    <strong>今天也辛苦啦，飞书陪你一起努力</strong>
-                    <span>这里会显示选中会话的内容、DC-Agent 任务提醒和宠物系统互动记录。</span>
-                  </div>
+                <div class="message-stream" data-message-stream>
+                  <div class="empty">选择左侧会话查看消息。</div>
                 </div>
-                <div class="detail-foot">
-                  <span>当前是工作台消息面板原型，不再触发飞书 iframe 二次扫码。</span>
-                  <a class="button primary" href="https://www.feishu.cn/messenger" target="_blank" rel="noreferrer">进入飞书网页版</a>
-                </div>
+                <form class="message-input" data-message-form>
+                  <textarea
+                    data-message-input
+                    rows="1"
+                    placeholder="输入消息，Enter 发送，Shift + Enter 换行"
+                  ></textarea>
+                  <button type="submit" class="send-button" data-send-button disabled>发送</button>
+                </form>
               </div>
+            </div>
             </div>
           </section>
 
@@ -794,13 +1076,56 @@
           </section>
 
           <section class="panel" data-panel="knowledge" aria-label="知识库">
-            <div class="placeholder">
-              <h2>知识库</h2>
-              <p>项目 SOP、客户资料、案例复盘、素材规范和培训文档可以集中到这里，之后再接飞书云文档或 DC-Agent 的知识库检索。</p>
-              <div class="tool-grid">
-                <article class="tool-card"><strong>项目资料</strong><span>统一沉淀客户、合同、脚本、素材和交付版本。</span></article>
-                <article class="tool-card"><strong>培训手册</strong><span>新人引导、部门流程和工具说明集中维护。</span></article>
-                <article class="tool-card"><strong>智能检索</strong><span>后续可以让 DC-Agent 直接回答知识库问题。</span></article>
+            <div class="feishu-frame-panel">
+              <div class="feishu-frame-bar">
+                <span class="bridge-pill warn" data-bridge-status>检测飞书桥中…</span>
+                <span data-bridge-hint>装好「巅池-飞书桥」扩展并刷新后，下方会显示真实飞书知识库</span>
+                <div class="frame-actions">
+                  <a href="https://o0ain5w98jh.feishu.cn/wiki/home/" target="_blank" rel="noreferrer">新窗口打开 ↗</a>
+                </div>
+              </div>
+              <iframe class="feishu-frame" data-feishu-iframe data-src="https://o0ain5w98jh.feishu.cn/wiki/home/" title="飞书知识库" hidden></iframe>
+              <div class="bridge-prompt" data-bridge-prompt>
+                <div class="card">
+                  <h2>装上「巅池-飞书桥」扩展，直接在这里看真飞书知识库</h2>
+                  <p>知识库 / 云文档 tab 通过一个 Chrome 扩展把你已登录的飞书 cookie 注入到嵌入页，让真飞书内容直接显示在工作台里。<strong>不装扩展看不到。</strong>每个员工装一次即可。</p>
+                  <ol>
+                    <li>找<strong>蔡挺</strong>要扩展压缩包，解压到本地任意目录（例如 <code>~/feishu-bridge</code>）</li>
+                    <li>Chrome 地址栏 <code>chrome://extensions</code>，右上角打开「<strong>开发者模式</strong>」</li>
+                    <li>左上角点「<strong>加载已解压扩展</strong>」→ 选刚解压的目录</li>
+                    <li>装好后<strong>刷新本页面</strong>（⌘ + R），这里就会变成真实飞书知识库</li>
+                  </ol>
+                  <div class="actions">
+                    <a class="button primary" href="https://o0ain5w98jh.feishu.cn/wiki/home/" target="_blank" rel="noreferrer">先在新窗口看 ↗</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel" data-panel="drive" aria-label="云文档">
+            <div class="feishu-frame-panel">
+              <div class="feishu-frame-bar">
+                <span class="bridge-pill warn" data-bridge-status>检测飞书桥中…</span>
+                <span data-bridge-hint>装好「巅池-飞书桥」扩展并刷新后，下方会显示真实飞书云文档</span>
+                <div class="frame-actions">
+                  <a href="https://o0ain5w98jh.feishu.cn/drive/home/" target="_blank" rel="noreferrer">新窗口打开 ↗</a>
+                </div>
+              </div>
+              <iframe class="feishu-frame" data-feishu-iframe data-src="https://o0ain5w98jh.feishu.cn/drive/home/" title="飞书云文档" hidden></iframe>
+              <div class="bridge-prompt" data-bridge-prompt>
+                <div class="card">
+                  <h2>装上「巅池-飞书桥」扩展，直接在这里看真飞书云文档</h2>
+                  <p>云文档 tab 通过 Chrome 扩展把你已登录的飞书 cookie 注入到嵌入页，让最近访问 / 收藏 / 我的文档库直接显示在工作台里。和知识库 tab 用同一个扩展。</p>
+                  <ol>
+                    <li>跟知识库 tab 用同一个扩展，已装过就不用再装</li>
+                    <li>没装的话，找<strong>蔡挺</strong>要压缩包，按知识库 tab 的步骤装一次</li>
+                    <li>装好刷新本页，这里就是真实飞书云文档</li>
+                  </ol>
+                  <div class="actions">
+                    <a class="button primary" href="https://o0ain5w98jh.feishu.cn/drive/home/" target="_blank" rel="noreferrer">先在新窗口看 ↗</a>
+                  </div>
+                </div>
               </div>
             </div>
           </section>
@@ -810,10 +1135,11 @@
 
     <script>
       const panelText = {
-        feishu: ["消息", "聚合飞书机器人通知、内部群消息和 DC-Agent 工作提醒。"],
+        feishu: ["消息", "工作台内部消息中心 + DC-Agent 工作提醒（真飞书消息请用飞书桌面端）。"],
         agent: ["DC-Agent", "把日常工作流交给公司的智能生产系统承接。"],
         pet: ["宠物系统", "把团队陪伴、任务激励和家文化做成更轻的日常入口。"],
-        knowledge: ["知识库", "沉淀项目、客户、流程和案例复盘。"],
+        knowledge: ["知识库", "通过飞书桥扩展嵌入真实飞书企业知识库。"],
+        drive: ["云文档", "通过飞书桥扩展嵌入真实飞书云文档与最近访问。"],
       };
 
       const title = document.querySelector("[data-panel-title]");
@@ -828,10 +1154,296 @@
           title.textContent = panelText[name][0];
           desc.textContent = panelText[name][1];
         }
+        ensureActiveFeishuIframeLoaded();
       }
 
       navItems.forEach((item) => {
         item.addEventListener("click", () => activatePanel(item.dataset.tab));
+      });
+
+      // ----- feishu-bridge extension detection + iframe lazy load -----
+
+      function isBridgeInstalled() {
+        return document.documentElement.dataset.feishuBridge === "installed";
+      }
+
+      function refreshBridgeUI() {
+        const installed = isBridgeInstalled();
+        const version = document.documentElement.dataset.feishuBridgeVersion || "";
+        document.querySelectorAll("[data-bridge-status]").forEach((el) => {
+          el.classList.toggle("ok", installed);
+          el.classList.toggle("warn", !installed);
+          el.textContent = installed
+            ? `飞书桥已连接${version ? " v" + version : ""}`
+            : "未检测到飞书桥扩展";
+        });
+        document.querySelectorAll("[data-bridge-hint]").forEach((el) => {
+          el.textContent = installed
+            ? "扩展正在为下方 iframe 注入飞书 cookie，messenger 路径除外（飞书锁了）"
+            : "装好「巅池-飞书桥」扩展并刷新本页，下方将显示真飞书内容";
+        });
+        document.querySelectorAll("[data-feishu-iframe]").forEach((f) => {
+          f.hidden = !installed;
+          if (!installed && f.src && f.src !== "about:blank" && f.src !== location.href) {
+            f.src = "about:blank";
+          }
+        });
+        document.querySelectorAll("[data-bridge-prompt]").forEach((p) => {
+          p.hidden = installed;
+        });
+      }
+
+      function ensureActiveFeishuIframeLoaded() {
+        if (!isBridgeInstalled()) return;
+        const activePanel = document.querySelector(".panel.is-active");
+        if (!activePanel) return;
+        activePanel.querySelectorAll("[data-feishu-iframe]").forEach((f) => {
+          const target = f.dataset.src;
+          if (target && (!f.src || f.src === "about:blank" || f.src === location.href)) {
+            f.src = target;
+          }
+        });
+      }
+
+      refreshBridgeUI();
+      ensureActiveFeishuIframeLoaded();
+      window.addEventListener("feishu-bridge-ready", () => {
+        refreshBridgeUI();
+        ensureActiveFeishuIframeLoaded();
+      });
+
+      // ----- workspace message center -----
+
+      const conversationList = document.querySelector("[data-conversation-list]");
+      const detailTitle = document.querySelector("[data-detail-title]");
+      const detailSub = document.querySelector("[data-detail-sub]");
+      const messageStream = document.querySelector("[data-message-stream]");
+      const messageForm = document.querySelector("[data-message-form]");
+      const messageInput = document.querySelector("[data-message-input]");
+      const sendButton = document.querySelector("[data-send-button]");
+      const persistenceBadge = document.querySelector("[data-message-persistence]");
+
+      let conversations = [];
+      let activeConversationId = null;
+      let sending = false;
+
+      function escapeHtml(s) {
+        return String(s == null ? "" : s).replace(/[&<>"']/g, (m) => ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#39;",
+        }[m]));
+      }
+
+      function formatTime(iso) {
+        if (!iso) return "";
+        const d = new Date(iso);
+        if (Number.isNaN(d.getTime())) return iso;
+        const now = new Date();
+        const sameDay = d.toDateString() === now.toDateString();
+        if (sameDay) {
+          return d.toLocaleTimeString("zh-CN", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false,
+          });
+        }
+        return d.toLocaleDateString("zh-CN", { month: "2-digit", day: "2-digit" });
+      }
+
+      function setPersistence(persistent) {
+        if (!persistenceBadge) return;
+        persistenceBadge.textContent = persistent ? "云端同步" : "本机临时";
+        persistenceBadge.classList.toggle("ephemeral", !persistent);
+        persistenceBadge.title = persistent
+          ? "消息已写入 Vercel KV / Upstash Redis"
+          : "未配置 KV，消息仅在当前函数实例存活期内有效";
+      }
+
+      function renderConversations() {
+        if (!conversations.length) {
+          conversationList.innerHTML = '<div class="conversation-empty">暂无会话</div>';
+          return;
+        }
+        conversationList.innerHTML = conversations
+          .map((c) => {
+            const active = c.id === activeConversationId ? " is-active" : "";
+            const tagClass = c.tag_color === "blue" ? "tag blue" : "tag";
+            const tag = c.tag ? `<span class="${tagClass}">${escapeHtml(c.tag)}</span>` : "";
+            return `
+              <button class="conversation${active}" type="button" data-conv-id="${escapeHtml(c.id)}">
+                <div class="avatar">${escapeHtml(c.avatar || "?")}</div>
+                <div class="conv-main">
+                  <div class="conv-title"><span>${escapeHtml(c.title)}</span>${tag}</div>
+                  <div class="conv-preview">${escapeHtml(c.last_message || "")}</div>
+                </div>
+                <div class="conv-time">${escapeHtml(c.updated_at || "")}</div>
+              </button>
+            `;
+          })
+          .join("");
+
+        conversationList.querySelectorAll("[data-conv-id]").forEach((btn) => {
+          btn.addEventListener("click", () => selectConversation(btn.dataset.convId));
+        });
+      }
+
+      function updateInputAvailability() {
+        const conv = conversations.find((c) => c.id === activeConversationId);
+        const readOnly = !conv || conv.read_only;
+        messageInput.disabled = readOnly;
+        messageInput.placeholder = readOnly
+          ? "此会话只读，不支持发送"
+          : "输入消息，Enter 发送，Shift + Enter 换行";
+        sendButton.disabled = sending || readOnly || !messageInput.value.trim();
+      }
+
+      function renderMessages(messages) {
+        if (!messages || !messages.length) {
+          messageStream.innerHTML = '<div class="empty">暂无消息。</div>';
+          return;
+        }
+        messageStream.innerHTML = messages
+          .map((m) => {
+            const role = m.role === "user" ? "user" : "assistant";
+            return `
+              <div class="bubble ${role}">${escapeHtml(m.content || "")}<div class="bubble-meta">${escapeHtml(formatTime(m.created_at))}</div></div>
+            `;
+          })
+          .join("");
+        messageStream.scrollTop = messageStream.scrollHeight;
+      }
+
+      function appendBubble(message) {
+        const emptyMark = messageStream.querySelector(".empty");
+        if (emptyMark) emptyMark.remove();
+        const role = message.role === "user" ? "user" : "assistant";
+        const div = document.createElement("div");
+        div.className = `bubble ${role}`;
+        div.innerHTML = `${escapeHtml(message.content || "")}<div class="bubble-meta">${escapeHtml(formatTime(message.created_at))}</div>`;
+        messageStream.appendChild(div);
+        messageStream.scrollTop = messageStream.scrollHeight;
+      }
+
+      async function loadConversations() {
+        try {
+          const r = await fetch("/api/workspace/conversations", { credentials: "same-origin" });
+          if (r.status === 401) {
+            window.location.href = "/api/auth/feishu/start?app=agent";
+            return;
+          }
+          const data = await r.json();
+          conversations = data.conversations || [];
+          if (!activeConversationId && conversations.length) {
+            activeConversationId = conversations[0].id;
+          }
+          renderConversations();
+          if (activeConversationId) await loadMessages(activeConversationId);
+        } catch {
+          conversationList.innerHTML =
+            '<div class="conversation-empty">会话加载失败，请刷新重试。</div>';
+        }
+      }
+
+      async function loadMessages(conversationId) {
+        const conv = conversations.find((c) => c.id === conversationId);
+        if (!conv) return;
+        detailTitle.textContent = conv.title;
+        detailSub.textContent = conv.subtitle || "";
+        messageStream.innerHTML = '<div class="empty">加载消息中…</div>';
+
+        try {
+          const url = `/api/workspace/messages?conversation_id=${encodeURIComponent(conversationId)}`;
+          const r = await fetch(url, { credentials: "same-origin" });
+          if (r.status === 401) {
+            window.location.href = "/api/auth/feishu/start?app=agent";
+            return;
+          }
+          const data = await r.json();
+          renderMessages(data.messages || []);
+          setPersistence(Boolean(data.persistent));
+          updateInputAvailability();
+        } catch {
+          messageStream.innerHTML = '<div class="empty">消息加载失败。</div>';
+        }
+      }
+
+      async function selectConversation(id) {
+        if (id === activeConversationId) return;
+        activeConversationId = id;
+        renderConversations();
+        await loadMessages(id);
+        if (!messageInput.disabled) messageInput.focus();
+      }
+
+      async function sendMessage() {
+        if (sending) return;
+        const content = messageInput.value.trim();
+        if (!content || !activeConversationId) return;
+
+        sending = true;
+        sendButton.disabled = true;
+        const oldLabel = sendButton.textContent;
+        sendButton.textContent = "发送中…";
+
+        appendBubble({ role: "user", content, created_at: new Date().toISOString() });
+        messageInput.value = "";
+        messageInput.style.height = "auto";
+
+        try {
+          const r = await fetch("/api/workspace/messages", {
+            method: "POST",
+            credentials: "same-origin",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ conversation_id: activeConversationId, content }),
+          });
+          if (r.status === 401) {
+            window.location.href = "/api/auth/feishu/start?app=agent";
+            return;
+          }
+          const data = await r.json().catch(() => ({}));
+          if (r.ok && data.reply) {
+            appendBubble(data.reply);
+          } else if (!r.ok) {
+            appendBubble({
+              role: "assistant",
+              content: `（发送失败：${data.error || r.status}）`,
+              created_at: new Date().toISOString(),
+            });
+          }
+          if (typeof data.persistent === "boolean") setPersistence(data.persistent);
+        } catch {
+          appendBubble({
+            role: "assistant",
+            content: "（消息发送失败，请检查网络后重试）",
+            created_at: new Date().toISOString(),
+          });
+        } finally {
+          sending = false;
+          sendButton.textContent = oldLabel;
+          updateInputAvailability();
+          messageInput.focus();
+        }
+      }
+
+      messageInput.addEventListener("input", () => {
+        messageInput.style.height = "auto";
+        messageInput.style.height = Math.min(messageInput.scrollHeight, 140) + "px";
+        updateInputAvailability();
+      });
+
+      messageInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          if (!sendButton.disabled) sendMessage();
+        }
+      });
+
+      messageForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        if (!sendButton.disabled) sendMessage();
       });
 
       async function loadSession() {
@@ -845,6 +1457,7 @@
           document.querySelector("[data-user-name]").textContent = data.user.name || "巅池员工";
           document.querySelector("[data-user-meta]").textContent =
             data.user.email || data.user.open_id || "飞书身份已通过验证";
+          await loadConversations();
         } catch {
           window.location.href = "/api/auth/feishu/start?app=agent";
         }
