@@ -111,7 +111,7 @@
 |---|---|---|
 | 当前 | DC-Agent onboarding state machine + 测试通过结果卡（双按钮）| ✅ 已上线 |
 | M1 v0 | dianchi server 核心 API（钱包 / 商店 / 购买 / 试用）| ✅ 今天上线 |
-| M1 v1 | 加 `POST /api/activate` + `/api/me` 响应加 activated 字段 | ⏳ 这周 |
+| M1 v1 | 加 `POST /api/activate` + `/api/me` 响应加 activated 字段 | ✅ 已完成 |
 | M2 | 桌面端 fork DyberPet + 接 server + 激活态轮询 + dianchi:// URL scheme | ⏳ 2-3 周 |
 | M3 | DC-Agent 改 templates.py 按钮 + main.py handler 接 dianchi 激活 API | ⏳ 跟 M2 同期或之后 |
 | M4 | 飞书 webhook / DC-Agent 触发 → 金币奖励 | ⏳ |

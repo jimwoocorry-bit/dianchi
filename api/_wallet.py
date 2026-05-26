@@ -4,6 +4,7 @@ KV schema（key 前缀 dianchi:）：
 - user:{open_id}:wallet      JSON {coins, total_earned, total_spent}
 - user:{open_id}:purchases   JSON [item_id, item_id, ...]
 - user:{open_id}:trials      JSON [{item_id, start_ts, end_ts}]
+- user:{open_id}:activated   JSON true/false
 """
 
 from __future__ import annotations
@@ -25,34 +26,50 @@ def _key(open_id: str, suffix: str) -> str:
 
 
 def _read_json(key: str, default: Any) -> Any:
-    raw = _kv.lrange(key, 0, 0)
-    if raw:
+    raw = _kv.get_value(key)
+    if raw is not None:
         try:
-            return json.loads(raw[0])
+            return json.loads(raw)
+        except (ValueError, TypeError):
+            pass
+
+    # M1 v0 wrote single values as a one-item Redis list. Keep read compatibility
+    # while all new writes use proper SET/GET cells.
+    legacy = _kv.lrange(key, 0, 0)
+    if legacy:
+        try:
+            return json.loads(legacy[0])
         except (ValueError, TypeError):
             pass
     return default
 
 
 def _write_json(key: str, value: Any) -> None:
-    # 用 LPUSH+LTRIM 把 list 当成单值 cell（_kv 抽象只暴露 list ops）
     payload = json.dumps(value, ensure_ascii=False)
-    # 删旧值
-    _kv.ltrim(key, 1, 0)  # empty the list
-    _kv.lpush(key, payload)
-    _kv.ltrim(key, 0, 0)  # keep only newest
+    _kv.set_value(key, payload)
+
+
+def default_wallet() -> dict:
+    return {
+        "coins": DEFAULT_NEW_USER_COINS,
+        "total_earned": DEFAULT_NEW_USER_COINS,
+        "total_spent": 0,
+    }
 
 
 def get_wallet(open_id: str) -> dict:
-    data = _read_json(
-        _key(open_id, "wallet"),
-        {"coins": DEFAULT_NEW_USER_COINS, "total_earned": DEFAULT_NEW_USER_COINS, "total_spent": 0},
-    )
+    data = _read_json(_key(open_id, "wallet"), default_wallet())
     return data
 
 
 def set_wallet(open_id: str, wallet: dict) -> None:
     _write_json(_key(open_id, "wallet"), wallet)
+
+
+def create_wallet(open_id: str) -> dict:
+    wallet = default_wallet()
+    set_wallet(open_id, wallet)
+    return wallet
 
 
 def get_purchases(open_id: str) -> list[str]:
@@ -92,6 +109,14 @@ def add_trial(open_id: str, item_id: str, minutes: int) -> dict:
     active.append(trial)
     _write_json(_key(open_id, "trials"), active)
     return trial
+
+
+def is_activated(open_id: str) -> bool:
+    return bool(_read_json(_key(open_id, "activated"), False))
+
+
+def set_activated(open_id: str, activated: bool) -> None:
+    _write_json(_key(open_id, "activated"), activated)
 
 
 def is_unlocked(open_id: str, item_id: str) -> tuple[bool, str]:

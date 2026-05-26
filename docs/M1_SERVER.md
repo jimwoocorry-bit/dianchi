@@ -48,6 +48,7 @@
 | `user:{open_id}:wallet` | JSON `{coins, total_earned, total_spent}` | 用户钱包，默认新员工 1000 金币 |
 | `user:{open_id}:purchases` | JSON `[item_id, ...]` | 已永久解锁的商品 id 列表 |
 | `user:{open_id}:trials` | JSON `[{item_id, start_ts, end_ts, minutes}]` | 进行中的试用（过期自动清理）|
+| `user:{open_id}:activated` | JSON `true/false` | 是否已通过 DC-Agent onboarding 领取宠物 |
 | `admin:users` | JSON `[open_id, ...]`（M3 加）| admin 白名单（M1 v0 写死在 `_admin.py`）|
 | `admin:config` | JSON 配置（M3 加）| 默认初始金币 / 试用折扣 / 等 |
 
@@ -59,7 +60,8 @@
 
 | Method | Path | 说明 |
 |---|---|---|
-| `GET` | `/api/me` | 当前用户 + 登录态（M0 已有，不动）|
+| `GET` | `/api/me` | 当前用户 + 登录态 + `activated` |
+| `POST` | `/api/activate` | 幂等激活宠物系统：创建钱包、解锁 ChrisKitty、标记 activated |
 | `GET` | `/api/wallet` | 当前用户钱包余额 + 流水概览 |
 | `GET` | `/api/shop` | 商品列表 + 当前用户每个商品的解锁状态（purchased / trial / locked + 剩余试用秒数）|
 | `POST` | `/api/buy` | body `{item_id}`，扣 price 永久解锁 |
@@ -94,7 +96,7 @@
 | Phase | 内容 | 状态 |
 |---|---|---|
 | **M1 v0**（今晚）| 5 个核心 API + admin.html 占位 + KV schema | ⏳ 进行中 |
-| **M1 v1**（本周）| commit + push + Vercel deploy + curl 验证 + DyberPet 桌面端先 mock 接一个 API 跑通 | ⏳ |
+| **M1 v1**（本周）| `POST /api/activate` + `/api/me.activated` + KV SET/GET helpers + curl 验证 | ✅ |
 | **M2**（2-3 周后）| 桌面端 fork DyberPet + 真接 server（替换本地 userdata.json）| ⏳ |
 | **M3**（M2 之后）| admin/* API + 管理后台真功能 | ⏳ |
 | **M4**（M3 之后）| DC-Agent / 飞书 webhook → 业务事件奖励金币 | ⏳ |
@@ -114,7 +116,6 @@
 |---|---|
 | 商品目录硬编码（改了要 deploy）| M2 移到 KV，admin 可在管理后台增删改 |
 | admin 白名单硬编码（蔡挺）| M3 移到 KV |
-| 没有 `_kv` 的 SET/GET，用 list hack 模拟 single value | M1 v1 给 `_kv.py` 加 `set_value` / `get_value` |
 | 没有 audit log | M3 |
 | 没有 webhook 接业务事件 | M4 |
 | 没有跨员工互动（送礼物 / 排行榜）| 暂不规划 |
