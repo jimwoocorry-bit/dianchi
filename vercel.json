@@ -11,6 +11,14 @@
     {
       "source": "/auth/logout",
       "destination": "/api/auth/logout"
+    },
+    {
+      "source": "/admin",
+      "destination": "/admin.html"
+    },
+    {
+      "source": "/workspace",
+      "destination": "/workspace.html"
     }
   ]
 }
