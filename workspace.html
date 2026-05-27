@@ -345,6 +345,7 @@
       .feishu-frame {
         flex: 1 1 auto;
         width: 100%;
+        height: 100%;
         border: 0;
         background: #fff;
         display: block;
@@ -463,11 +464,11 @@
 
         <nav class="nav-group" aria-label="工作台导航">
           <div class="nav-title">工作入口</div>
-          <a class="nav-item" href="https://www.feishu.cn/messenger">
+          <button class="nav-item is-active" type="button" data-tab="feishu">
             <span class="nav-mark">M</span>
             消息
-          </a>
-          <button class="nav-item is-active" type="button" data-tab="agent">
+          </button>
+          <button class="nav-item" type="button" data-tab="agent">
             <span class="nav-mark">AI</span>
             DC-Agent
           </button>
@@ -493,7 +494,17 @@
 
       <main class="main">
         <section class="content">
-          <section class="panel is-active" data-panel="agent" aria-label="DC-Agent">
+          <section class="panel is-active" data-panel="feishu" aria-label="飞书消息">
+            <iframe
+              class="feishu-frame"
+              src="https://www.feishu.cn/messenger"
+              title="飞书消息"
+              sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-downloads allow-modals allow-pointer-lock allow-presentation"
+              allow="clipboard-read; clipboard-write; camera; microphone; fullscreen"
+            ></iframe>
+          </section>
+
+          <section class="panel" data-panel="agent" aria-label="DC-Agent">
             <div class="placeholder">
               <h2>DC-Agent</h2>
               <p>这里会承载公司的 AI 工作流入口：需求整理、脚本生成、任务拆解、素材归档、项目复盘。当前先作为工作台入口占位，后续可以接入 Hermes WebUI 或 DC-Agent 云端服务。</p>
@@ -583,11 +594,20 @@
         navItems.forEach((item) => item.classList.toggle("is-active", item.dataset.tab === name));
         panels.forEach((panel) => panel.classList.toggle("is-active", panel.dataset.panel === name));
         ensureActiveFeishuIframeLoaded();
+        if (location.hash !== `#${name}`) {
+          history.replaceState(null, "", `#${name}`);
+        }
       }
 
       navItems.forEach((item) => {
         item.addEventListener("click", () => activatePanel(item.dataset.tab));
       });
+      window.dianchiActivatePanel = activatePanel;
+
+      const initialPanel = location.hash.replace(/^#/, "");
+      if (initialPanel && navItems.some((item) => item.dataset.tab === initialPanel)) {
+        activatePanel(initialPanel);
+      }
 
       // ----- feishu-bridge extension detection + iframe lazy load -----
 
