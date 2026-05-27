@@ -952,24 +952,9 @@
       </aside>
 
       <main class="main">
-        <header class="topbar">
-          <div>
-            <h1 data-panel-title>消息</h1>
-            <p data-panel-desc>聚合飞书机器人通知、内部群消息和 DC-Agent 工作提醒。</p>
-          </div>
-          <div class="top-actions">
-            <span class="status-dot">飞书身份已连接</span>
-            <a class="button" href="https://www.feishu.cn/messenger" target="_blank" rel="noreferrer">新窗口打开飞书</a>
-          </div>
-        </header>
-
         <section class="content">
           <section class="panel is-active" data-panel="feishu" aria-label="消息">
             <div class="panel-stack">
-              <div class="message-notice">
-                <span>💬 这里是 <strong>工作台内部消息中心</strong>（mock + DC-Agent 工作流提醒）。要看真实飞书消息（账号安全 / 群聊 / 直接消息），请用<strong>飞书桌面端</strong>。</span>
-                <a href="https://www.feishu.cn/messenger" target="_blank" rel="noreferrer">新窗口打开飞书 ↗</a>
-              </div>
               <div class="message-workbench">
               <div class="message-list">
                 <div class="message-head">
@@ -995,13 +980,6 @@
                 </div>
               </div>
               <div class="message-detail">
-                <div class="detail-head">
-                  <div>
-                    <strong data-detail-title>巅池消息中心</strong>
-                    <span data-detail-sub>选择左侧会话查看消息。</span>
-                  </div>
-                  <a class="button" href="https://www.feishu.cn/messenger" target="_blank" rel="noreferrer">新窗口打开飞书</a>
-                </div>
                 <div class="message-stream" data-message-stream>
                   <div class="empty">选择左侧会话查看消息。</div>
                 </div>
@@ -1101,26 +1079,12 @@
     </div>
 
     <script>
-      const panelText = {
-        feishu: ["消息", "工作台内部消息中心 + DC-Agent 工作提醒（真飞书消息请用飞书桌面端）。"],
-        agent: ["DC-Agent", "把日常工作流交给公司的智能生产系统承接。"],
-        pet: ["宠物系统", "把团队陪伴、任务激励和家文化做成更轻的日常入口。"],
-        knowledge: ["知识库", "通过飞书桥扩展嵌入真实飞书企业知识库。"],
-        drive: ["云文档", "通过飞书桥扩展嵌入真实飞书云文档与最近访问。"],
-      };
-
-      const title = document.querySelector("[data-panel-title]");
-      const desc = document.querySelector("[data-panel-desc]");
       const navItems = [...document.querySelectorAll("[data-tab]")];
       const panels = [...document.querySelectorAll("[data-panel]")];
 
       function activatePanel(name) {
         navItems.forEach((item) => item.classList.toggle("is-active", item.dataset.tab === name));
         panels.forEach((panel) => panel.classList.toggle("is-active", panel.dataset.panel === name));
-        if (panelText[name]) {
-          title.textContent = panelText[name][0];
-          desc.textContent = panelText[name][1];
-        }
         ensureActiveFeishuIframeLoaded();
       }
 
@@ -1182,8 +1146,6 @@
       // ----- workspace message center -----
 
       const conversationList = document.querySelector("[data-conversation-list]");
-      const detailTitle = document.querySelector("[data-detail-title]");
-      const detailSub = document.querySelector("[data-detail-sub]");
       const messageStream = document.querySelector("[data-message-stream]");
       const messageForm = document.querySelector("[data-message-form]");
       const messageInput = document.querySelector("[data-message-input]");
@@ -1317,8 +1279,6 @@
       async function loadMessages(conversationId) {
         const conv = conversations.find((c) => c.id === conversationId);
         if (!conv) return;
-        detailTitle.textContent = conv.title;
-        detailSub.textContent = conv.subtitle || "";
         messageStream.innerHTML = '<div class="empty">加载消息中…</div>';
 
         try {
