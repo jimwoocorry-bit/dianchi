@@ -75,32 +75,6 @@
         text-transform: uppercase;
       }
 
-      .user-card {
-        border: 1px solid var(--line);
-        border-radius: 8px;
-        padding: 14px;
-        background: var(--panel);
-      }
-
-      .user-card .label {
-        color: var(--muted);
-        font-size: 12px;
-      }
-
-      .user-card strong {
-        display: block;
-        margin-top: 6px;
-        font-size: 18px;
-      }
-
-      .user-card p {
-        margin: 8px 0 0;
-        color: var(--muted);
-        font-size: 13px;
-        line-height: 1.5;
-        word-break: break-word;
-      }
-
       .nav-group {
         display: grid;
         gap: 8px;
@@ -897,8 +871,7 @@
           grid-template-columns: repeat(2, minmax(0, 1fr));
         }
 
-        .sidebar-footer,
-        .user-card {
+        .sidebar-footer {
           display: none;
         }
 
@@ -947,12 +920,6 @@
           <img src="docs/grey_test_video/dianchi-logo-animated.video.loop.svg" alt="巅池文化传媒 logo" />
           <span><strong>巅池工作台</strong><span>DC-Agent Workspace</span></span>
         </a>
-
-        <div class="user-card">
-          <div class="label">当前登录</div>
-          <strong data-user-name>正在校验</strong>
-          <p data-user-meta>通过飞书身份进入巅池内部工作台。</p>
-        </div>
 
         <nav class="nav-group" aria-label="工作台导航">
           <div class="nav-title">工作入口</div>
@@ -1454,9 +1421,6 @@
             window.location.href = "/api/auth/feishu/start?app=agent";
             return;
           }
-          document.querySelector("[data-user-name]").textContent = data.user.name || "巅池员工";
-          document.querySelector("[data-user-meta]").textContent =
-            data.user.email || data.user.open_id || "飞书身份已通过验证";
           await loadConversations();
         } catch {
           window.location.href = "/api/auth/feishu/start?app=agent";
