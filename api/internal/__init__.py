@@ -1,0 +1,1 @@
+"""Internal authenticated Vercel endpoints."""

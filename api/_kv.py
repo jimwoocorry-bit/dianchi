@@ -14,6 +14,7 @@ from __future__ import annotations
 import json
 import os
 import threading
+import time
 import urllib.error
 import urllib.request
 from typing import Any
@@ -24,10 +25,14 @@ REQUEST_TIMEOUT = 8
 
 def _rest_config() -> tuple[str, str] | None:
     url = (
-        os.environ.get("KV_REST_API_URL")
-        or os.environ.get("UPSTASH_REDIS_REST_URL")
-        or ""
-    ).strip().rstrip("/")
+        (
+            os.environ.get("KV_REST_API_URL")
+            or os.environ.get("UPSTASH_REDIS_REST_URL")
+            or ""
+        )
+        .strip()
+        .rstrip("/")
+    )
     token = (
         os.environ.get("KV_REST_API_TOKEN")
         or os.environ.get("UPSTASH_REDIS_REST_TOKEN")
@@ -44,11 +49,13 @@ class _MemoryStore:
     def __init__(self) -> None:
         self._lists: dict[str, list[str]] = {}
         self._values: dict[str, str] = {}
+        self._expires: dict[str, float] = {}
         self._lock = threading.Lock()
 
     def lpush(self, key: str, value: str) -> None:
         with self._lock:
             self._values.pop(key, None)
+            self._expires.pop(key, None)
             self._lists.setdefault(key, []).insert(0, value)
 
     def lrange(self, key: str, start: int, stop: int) -> list[str]:
@@ -65,14 +72,36 @@ class _MemoryStore:
                 stop = len(items) + stop
             self._lists[key] = items[start : stop + 1]
 
-    def set_value(self, key: str, value: str) -> None:
+    def set_value(
+        self,
+        key: str,
+        value: str,
+        ttl_seconds: int | None = None,
+    ) -> None:
         with self._lock:
             self._lists.pop(key, None)
             self._values[key] = value
+            if ttl_seconds is None:
+                self._expires.pop(key, None)
+            else:
+                self._expires[key] = time.monotonic() + ttl_seconds
 
     def get_value(self, key: str, default: Any = None) -> Any:
         with self._lock:
+            expires_at = self._expires.get(key)
+            if expires_at is not None and expires_at <= time.monotonic():
+                self._values.pop(key, None)
+                self._expires.pop(key, None)
+                return default
             return self._values.get(key, default)
+
+    def getdel_value(self, key: str, default: Any = None) -> Any:
+        with self._lock:
+            expires_at = self._expires.pop(key, None)
+            if expires_at is not None and expires_at <= time.monotonic():
+                self._values.pop(key, None)
+                return default
+            return self._values.pop(key, default)
 
 
 _memory = _MemoryStore()
@@ -101,18 +130,38 @@ def is_persistent() -> bool:
     return _rest_config() is not None
 
 
-def set_value(key: str, value: str) -> None:
+def set_value(
+    key: str,
+    value: str,
+    *,
+    ttl_seconds: int | None = None,
+    strict: bool = False,
+) -> None:
+    if ttl_seconds is not None and ttl_seconds <= 0:
+        raise ValueError("ttl_seconds must be positive")
+
     if is_persistent():
         try:
-            _rest_call(["SET", key, value])
+            command = ["SET", key, value]
+            if ttl_seconds is not None:
+                command.extend(["EX", str(ttl_seconds)])
+            _rest_call(command)
             return
-        except (urllib.error.URLError, urllib.error.HTTPError, RuntimeError, OSError, ValueError):
-            # Fall through to memory store so the user request still succeeds.
-            pass
-    _memory.set_value(key, value)
+        except (
+            urllib.error.URLError,
+            urllib.error.HTTPError,
+            RuntimeError,
+            OSError,
+            ValueError,
+        ) as exc:
+            if strict:
+                raise RuntimeError("KV REST API request failed") from exc
+    elif strict:
+        raise RuntimeError("KV REST API not configured")
+    _memory.set_value(key, value, ttl_seconds)
 
 
-def get_value(key: str, default: Any = None) -> Any:
+def get_value(key: str, default: Any = None, *, strict: bool = False) -> Any:
     if is_persistent():
         try:
             result = _rest_call(["GET", key])
@@ -120,9 +169,40 @@ def get_value(key: str, default: Any = None) -> Any:
             if item is None:
                 return default
             return str(item)
-        except (urllib.error.URLError, urllib.error.HTTPError, RuntimeError, OSError, ValueError):
-            pass
+        except (
+            urllib.error.URLError,
+            urllib.error.HTTPError,
+            RuntimeError,
+            OSError,
+            ValueError,
+        ) as exc:
+            if strict:
+                raise RuntimeError("KV REST API request failed") from exc
+    elif strict:
+        raise RuntimeError("KV REST API not configured")
     return _memory.get_value(key, default)
+
+
+def getdel_value(key: str, default: Any = None, *, strict: bool = False) -> Any:
+    if is_persistent():
+        try:
+            result = _rest_call(["GETDEL", key])
+            item = result.get("result") if isinstance(result, dict) else result
+            if item is None:
+                return default
+            return str(item)
+        except (
+            urllib.error.URLError,
+            urllib.error.HTTPError,
+            RuntimeError,
+            OSError,
+            ValueError,
+        ) as exc:
+            if strict:
+                raise RuntimeError("KV REST API request failed") from exc
+    elif strict:
+        raise RuntimeError("KV REST API not configured")
+    return _memory.getdel_value(key, default)
 
 
 def lpush(key: str, value: str) -> None:
@@ -130,7 +210,13 @@ def lpush(key: str, value: str) -> None:
         try:
             _rest_call(["LPUSH", key, value])
             return
-        except (urllib.error.URLError, urllib.error.HTTPError, RuntimeError, OSError, ValueError):
+        except (
+            urllib.error.URLError,
+            urllib.error.HTTPError,
+            RuntimeError,
+            OSError,
+            ValueError,
+        ):
             # Fall through to memory store so the user request still succeeds.
             pass
     _memory.lpush(key, value)
@@ -143,7 +229,13 @@ def lrange(key: str, start: int, stop: int) -> list[str]:
             items = result.get("result") if isinstance(result, dict) else result
             if isinstance(items, list):
                 return [str(item) for item in items]
-        except (urllib.error.URLError, urllib.error.HTTPError, RuntimeError, OSError, ValueError):
+        except (
+            urllib.error.URLError,
+            urllib.error.HTTPError,
+            RuntimeError,
+            OSError,
+            ValueError,
+        ):
             pass
     return _memory.lrange(key, start, stop)
 
@@ -153,6 +245,12 @@ def ltrim(key: str, start: int, stop: int) -> None:
         try:
             _rest_call(["LTRIM", key, str(start), str(stop)])
             return
-        except (urllib.error.URLError, urllib.error.HTTPError, RuntimeError, OSError, ValueError):
+        except (
+            urllib.error.URLError,
+            urllib.error.HTTPError,
+            RuntimeError,
+            OSError,
+            ValueError,
+        ):
             pass
     _memory.ltrim(key, start, stop)
