@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>启动巅池桌面助手</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #101421;
+        --muted: #66758d;
+        --line: #dbe3ee;
+        --brand: #0f8f7f;
+        --soft: #eef6f4;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: #f5f8fb;
+        color: var(--ink);
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      main {
+        width: min(720px, calc(100vw - 40px));
+        padding: 48px;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: #fff;
+        box-shadow: 0 24px 80px rgba(20, 35, 60, 0.08);
+      }
+
+      .mark {
+        width: 64px;
+        height: 64px;
+        border-radius: 16px;
+        display: grid;
+        place-items: center;
+        margin-bottom: 22px;
+        background: var(--soft);
+      }
+
+      .mark img {
+        width: 46px;
+        height: 46px;
+        object-fit: contain;
+      }
+
+      h1 {
+        margin: 0 0 14px;
+        font-size: 34px;
+        line-height: 1.18;
+      }
+
+      p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 18px;
+        line-height: 1.7;
+      }
+
+      .status {
+        margin: 28px 0;
+        padding: 16px 18px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: #f9fbfd;
+        color: #33445c;
+        font-size: 16px;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      a,
+      button {
+        appearance: none;
+        border: 0;
+        border-radius: 10px;
+        padding: 14px 18px;
+        font: inherit;
+        font-weight: 800;
+        text-decoration: none;
+        cursor: pointer;
+      }
+
+      [hidden] {
+        display: none !important;
+      }
+
+      .primary {
+        background: var(--brand);
+        color: #fff;
+      }
+
+      .secondary {
+        background: #eef3f9;
+        color: #24354c;
+      }
+
+      .hint {
+        margin-top: 22px;
+        font-size: 14px;
+        color: #8a98aa;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="mark">
+        <img src="/docs/grey_test_video/dianchi-logo-animated.video.loop.svg" alt="巅池文化传媒" />
+      </div>
+      <h1>启动巅池桌面助手</h1>
+      <p>使用刚才通过验证的飞书员工身份，打开已安装的客户端；如果尚未安装，将下载与你电脑匹配的版本。</p>
+      <div class="status" data-status data-state="checking-login">正在检查登录状态...</div>
+      <div class="actions">
+        <a class="primary" href="/api/desktop/open" data-open hidden>打开桌面助手</a>
+        <a class="primary" href="#" data-download hidden>下载安装包</a>
+        <button class="secondary" type="button" data-retry hidden>重新检测</button>
+        <a class="secondary" href="/api/auth/feishu/start?app=agent&amp;next=/desktop.html" data-login hidden>登录飞书</a>
+        <a class="secondary" href="/">返回官网</a>
+      </div>
+      <p class="hint">浏览器询问是否打开“巅池桌面助手”时请选择允许。安装包下载后需点击一次完成安装，页面不会读取电脑文件，也不会替你运行安装包。</p>
+    </main>
+    <script>
+      const statusEl = document.querySelector("[data-status]");
+      const openLink = document.querySelector("[data-open]");
+      const downloadLink = document.querySelector("[data-download]");
+      const retryButton = document.querySelector("[data-retry]");
+      const loginLink = document.querySelector("[data-login]");
+      let downloadStarted = false;
+
+      function setState(state, text) {
+        if (!statusEl) return;
+        statusEl.dataset.state = state;
+        statusEl.textContent = text;
+      }
+
+      function resetActions() {
+        openLink.hidden = true;
+        downloadLink.hidden = true;
+        retryButton.hidden = true;
+        loginLink.hidden = true;
+      }
+
+      function sleep(milliseconds) {
+        return new Promise((resolve) => window.setTimeout(resolve, milliseconds));
+      }
+
+      async function requestJson(url, options = {}) {
+        const response = await fetch(url, { credentials: "same-origin", ...options });
+        if (!response.ok) {
+          const error = new Error(`request_failed_${response.status}`);
+          error.status = response.status;
+          throw error;
+        }
+        return response.json();
+      }
+
+      function platformDescriptor() {
+        const platform = `${navigator.userAgentData?.platform || navigator.platform || ""} ${navigator.userAgent || ""}`.toLowerCase();
+        if (platform.includes("win")) return { platform: "windows", arch: "x64", label: "Windows" };
+        if (platform.includes("mac")) return { platform: "macos", arch: "arm64", label: "macOS" };
+        return null;
+      }
+
+      function launchProbe(probeId) {
+        const frame = document.createElement("iframe");
+        frame.hidden = true;
+        frame.src = `dianchi://probe?probe_id=${encodeURIComponent(probeId)}`;
+        document.body.appendChild(frame);
+        window.setTimeout(() => frame.remove(), 3500);
+      }
+
+      async function installedProbeSucceeded(probeId) {
+        for (let attempt = 0; attempt < 6; attempt += 1) {
+          await sleep(500);
+          const result = await requestJson(`/api/desktop/probe/status?probe_id=${encodeURIComponent(probeId)}`);
+          if (result.status === "installed") return true;
+          if (result.status === "expired") return false;
+        }
+        return false;
+      }
+
+      async function downloadInstaller() {
+        const target = platformDescriptor();
+        if (!target) {
+          setState("download-blocked", "暂不支持这台电脑的系统，请联系公司管理员获取安装包。");
+          retryButton.hidden = false;
+          return;
+        }
+        setState("downloading-installer", `未检测到已安装客户端，正在准备 ${target.label} 安装包...`);
+        const release = await requestJson(`/api/desktop/latest?platform=${target.platform}&arch=${target.arch}`);
+        downloadLink.href = release.artifact.url;
+        downloadLink.textContent = `下载 ${target.label} v${release.version}`;
+        downloadLink.hidden = false;
+        if (!downloadStarted) {
+          downloadStarted = true;
+          downloadLink.click();
+        }
+        await sleep(1500);
+        setState("download-blocked", "安装包已请求下载；如果浏览器没有开始下载，请点击下方按钮重试。安装完成后返回本页重新检测。");
+        retryButton.hidden = false;
+      }
+
+      async function bootstrapDesktop() {
+        resetActions();
+        downloadStarted = false;
+        setState("checking-login", "正在检查飞书员工登录状态...");
+        try {
+          const me = await requestJson("/api/me");
+          if (!me.logged_in) {
+            setState("denied", "尚未登录飞书，请先使用公司飞书账号登录。");
+            loginLink.hidden = false;
+            return;
+          }
+          if (!me.allowed) {
+            const state = me.auth_status === "status_pending"
+              ? "pending"
+              : me.auth_status === "status_disabled"
+                ? "disabled"
+                : ["snapshot_missing", "snapshot_invalid", "snapshot_stale", "authorization_unavailable"].includes(me.auth_status)
+                  ? "service-unavailable"
+                  : "denied";
+            const messages = {
+              pending: "员工账号尚未启用，请联系公司管理员。",
+              disabled: "员工账号已停用，请联系公司管理员。",
+              denied: "当前飞书账号不是公司内部员工，无法下载安装。",
+              "service-unavailable": "员工身份服务暂不可用，请稍后重试。",
+            };
+            setState(state, messages[state]);
+            if (state === "service-unavailable") retryButton.hidden = false;
+            return;
+          }
+
+          setState("probing", "正在询问本机是否已安装巅池桌面助手...");
+          const probe = await requestJson("/api/desktop/probe/start", { method: "POST" });
+          launchProbe(probe.probe_id);
+          if (await installedProbeSucceeded(probe.probe_id)) {
+            setState("opening-installed", "已检测到巅池桌面助手，正在安全授权并打开...");
+            openLink.hidden = false;
+            window.setTimeout(() => {
+              window.location.href = "/api/desktop/open";
+            }, 250);
+            return;
+          }
+          await downloadInstaller();
+        } catch {
+          setState("service-unavailable", "桌面接入服务暂时不可用，请稍后重试。");
+          retryButton.hidden = false;
+        }
+      }
+
+      openLink.addEventListener("click", () => {
+        setState("opening-installed", "正在安全授权并打开巅池桌面助手...");
+      });
+      retryButton.addEventListener("click", bootstrapDesktop);
+
+      bootstrapDesktop();
+    </script>
+  </body>
+</html>

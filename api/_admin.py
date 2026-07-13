@@ -11,7 +11,14 @@ import time
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler
 
-from api._feishu import SESSION_COOKIE, SESSION_MAX_AGE, cookie_value, verify_payload
+from api._employee_access import resolve_employee
+from api._feishu import (
+    SESSION_COOKIE,
+    SESSION_MAX_AGE,
+    cookie_value,
+    env,
+    verify_payload,
+)
 
 
 # v0 硬编码 admin（蔡挺）。后续从 KV 读。
@@ -21,16 +28,64 @@ DEFAULT_ADMIN_OPEN_IDS = {
 
 
 def resolve_user(headers) -> dict | None:
+    auth = resolve_auth(headers)
+    return auth["user"] if auth["logged_in"] else None
+
+
+def resolve_auth(headers) -> dict:
     signed = cookie_value(headers.get("Cookie"), SESSION_COOKIE)
     payload = verify_payload(signed or "", max_age=SESSION_MAX_AGE)
     if not payload or payload.get("exp", 0) < time.time():
-        return None
-    return payload.get("user")
+        return {
+            "logged_in": False,
+            "allowed": False,
+            "auth_status": "not_logged_in",
+            "user": None,
+            "employee": None,
+            "identity": None,
+        }
+
+    user = payload.get("user") or {}
+    employee = None
+    identity = None
+    auth_status = "invalid_session_user"
+    allowed = False
+
+    if user:
+        try:
+            resolved = resolve_employee(
+                user,
+                expected_tenant=env("FEISHU_COMPANY_TENANT_KEY") or None,
+            )
+            employee = resolved.get("employee")
+            identity = resolved.get("identity")
+            auth_status = resolved.get("reason", "unknown")
+            allowed = bool(resolved.get("allowed"))
+            if employee:
+                user = {
+                    **user,
+                    "employee_id": employee.get("employee_id", ""),
+                    "employee_role": employee.get("role", "employee"),
+                    "employee_status": employee.get("status", "pending"),
+                }
+        except Exception:  # noqa: BLE001
+            auth_status = "employee_identity_unavailable"
+
+    return {
+        "logged_in": True,
+        "allowed": allowed,
+        "auth_status": auth_status,
+        "user": user,
+        "employee": employee,
+        "identity": identity,
+    }
 
 
 def is_admin(user: dict | None) -> bool:
     if not user:
         return False
+    if user.get("employee_role") == "admin":
+        return True
     open_id = user.get("open_id") or ""
     return open_id in DEFAULT_ADMIN_OPEN_IDS
 
@@ -46,12 +101,23 @@ def write_json(handler: BaseHTTPRequestHandler, status: HTTPStatus, body: dict) 
 
 
 def require_login(handler: BaseHTTPRequestHandler) -> dict | None:
-    """统一处理 401。返回 user 或 None（None 时已经写了响应）。"""
-    user = resolve_user(handler.headers)
-    if user is None:
+    """统一处理登录和员工状态。返回 active user 或 None。"""
+    auth = resolve_auth(handler.headers)
+    if not auth["logged_in"]:
         write_json(handler, HTTPStatus.UNAUTHORIZED, {"error": "not_logged_in"})
         return None
-    return user
+    if not auth["allowed"]:
+        write_json(
+            handler,
+            HTTPStatus.FORBIDDEN,
+            {
+                "error": "employee_not_allowed",
+                "auth_status": auth["auth_status"],
+                "employee": auth["employee"],
+            },
+        )
+        return None
+    return auth["user"]
 
 
 def require_admin(handler: BaseHTTPRequestHandler) -> dict | None:

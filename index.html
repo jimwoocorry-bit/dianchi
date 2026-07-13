@@ -976,7 +976,7 @@
       </div>
       <div class="nav-actions">
         <a class="link-btn" href="#contact">合作咨询</a>
-        <a class="employee-btn" href="/api/auth/feishu/start" data-feishu-login>
+        <a class="employee-btn" href="/api/auth/feishu/start?app=agent&amp;next=/desktop.html" data-feishu-login>
           <span class="qr-icon" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
           员工入口
         </a>
@@ -1099,11 +1099,11 @@
           </div>
           <aside class="login-panel">
             <img src="docs/grey_test_video/dianchi-logo-animated.video.loop.svg" alt="巅池文化传媒动态 logo" />
-            <h3>飞书扫码进入巅池工作台</h3>
-            <p>员工通过飞书身份进入 DC-Agent，查看个人任务、部门协作、知识库与内部通知。</p>
-            <a class="feishu-login-cta" href="/api/auth/feishu/start" data-feishu-login>
+            <h3>飞书登录激活桌面端</h3>
+            <p>员工通过飞书身份登录后，激活本地巅池桌面端，并启动宠物系统与工作入口。</p>
+            <a class="feishu-login-cta" href="/api/auth/feishu/start?app=agent&amp;next=/desktop.html" data-feishu-login>
               <span class="qr-icon" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
-              使用飞书扫码登录
+              登录并打开桌面端
             </a>
           </aside>
         </div>
@@ -1114,7 +1114,7 @@
         <p>对外展示专业和结果，对内承载协作和成长。巅池文化传媒的主页，应当同时像品牌门面，也像智能组织的入口。</p>
         <div class="contact-actions">
           <a class="primary-cta" href="#services">查看服务能力</a>
-          <a class="secondary-cta" href="/api/auth/feishu/start" data-feishu-login>员工飞书登录</a>
+          <a class="secondary-cta" href="/api/auth/feishu/start?app=agent&amp;next=/desktop.html" data-feishu-login>员工登录桌面端</a>
         </div>
       </section>
     </main>
@@ -1122,10 +1122,10 @@
     <div class="modal" id="employee-login" aria-label="员工飞书登录">
       <div class="modal-card">
         <h3>员工入口</h3>
-        <p>员工入口已接入飞书 OAuth。请通过飞书授权页完成扫码或账号登录。</p>
+        <p>员工入口已接入飞书 OAuth。授权后会激活并打开本地巅池桌面端。</p>
         <div class="modal-row">
           <div class="fake-qr"></div>
-          <a class="modal-close" href="/api/auth/feishu/start">进入飞书登录</a>
+          <a class="modal-close" href="/api/auth/feishu/start?app=agent&amp;next=/desktop.html">登录并打开桌面端</a>
         </div>
       </div>
     </div>
@@ -1148,11 +1148,11 @@
           const response = await fetch("/api/me", { credentials: "same-origin" });
           if (!response.ok) return;
           const data = await response.json();
-          if (!data.logged_in || !data.user) return;
+          if (!data.logged_in || !data.allowed || !data.user) return;
           document.querySelectorAll("[data-feishu-login]").forEach((link) => {
-            link.href = "/workspace.html";
+            link.href = "/desktop.html?from=home";
             const icon = link.querySelector(".qr-icon");
-            link.textContent = data.user.name ? `${data.user.name} · 工作台` : "进入工作台";
+            link.textContent = data.user.name ? `${data.user.name} · 打开桌面端` : "打开桌面端";
             if (icon) link.prepend(icon);
           });
         } catch {
