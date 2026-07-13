@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import base64
 import hashlib
+import hmac
 import json
 import secrets
 import time
@@ -16,6 +18,7 @@ from api._feishu import SESSION_MAX_AGE, env, sign_payload
 
 HANDOFF_TTL_SECONDS = 60
 REFRESH_TTL_SECONDS = 30 * 24 * 60 * 60
+BINDING_ASSERTION_TTL_SECONDS = 60
 
 
 class DesktopAuthError(ValueError):
@@ -43,6 +46,59 @@ def _canonical_json(value: Any) -> str:
         separators=(",", ":"),
         sort_keys=True,
     )
+
+
+def issue_desktop_binding_assertion(
+    employee: dict[str, Any],
+    identity: dict[str, Any],
+    *,
+    installation_id: str,
+) -> dict[str, str]:
+    """Issue a short-lived pet binding assertion for one desktop installation.
+
+    Args:
+        employee: Current mirror-backed employee record.
+        identity: Current mirror-backed Feishu identity record.
+        installation_id: Stable non-secret desktop installation identifier.
+
+    Returns:
+        Stable desktop session ID and an optional signed binding assertion.
+    """
+    employee_id = str(employee.get("employee_id") or "").strip()
+    feishu_open_id = str(identity.get("feishu_open_id") or "").strip()
+    desktop_session_id = "desktop_" + hashlib.sha256(
+        f"{employee_id}:{installation_id}".encode("utf-8")
+    ).hexdigest()[:32]
+    secret = env("DESKTOP_BINDING_SECRET")
+    if not secret or not employee_id or not feishu_open_id or not installation_id:
+        return {
+            "desktop_session_id": desktop_session_id,
+            "desktop_assertion": "",
+        }
+
+    now = int(time.time())
+    payload = {
+        "employee_id": employee_id,
+        "feishu_open_id": feishu_open_id,
+        "desktop_session_id": desktop_session_id,
+        "nonce": secrets.token_hex(16),
+        "iat": now,
+        "exp": now + BINDING_ASSERTION_TTL_SECONDS,
+    }
+    body = base64.urlsafe_b64encode(
+        _canonical_json(payload).encode("utf-8")
+    ).rstrip(b"=").decode("ascii")
+    signature = base64.urlsafe_b64encode(
+        hmac.new(
+            secret.encode("utf-8"),
+            body.encode("ascii"),
+            hashlib.sha256,
+        ).digest()
+    ).rstrip(b"=").decode("ascii")
+    return {
+        "desktop_session_id": desktop_session_id,
+        "desktop_assertion": f"{body}.{signature}",
+    }
 
 
 def issue_handoff(active_auth: dict[str, Any]) -> str:
@@ -159,12 +215,18 @@ def exchange_handoff(code: str, *, installation_id: str) -> dict[str, Any]:
         ttl_seconds=REFRESH_TTL_SECONDS,
         strict=True,
     )
+    binding = issue_desktop_binding_assertion(
+        employee,
+        identity,
+        installation_id=installation_id,
+    )
     return {
         "session": session,
         "refresh_token": refresh_token,
         "employee": employee,
         "identity": identity,
         "pet_api_url": env("DESKTOP_PET_API_URL"),
+        **binding,
     }
 
 
@@ -246,12 +308,18 @@ def rotate_refresh(refresh_token: str, *, installation_id: str) -> dict[str, Any
         ttl_seconds=REFRESH_TTL_SECONDS,
         strict=True,
     )
+    binding = issue_desktop_binding_assertion(
+        employee,
+        identity,
+        installation_id=installation_id,
+    )
     return {
         "session": session,
         "refresh_token": new_refresh_token,
         "employee": employee,
         "identity": identity,
         "pet_api_url": env("DESKTOP_PET_API_URL"),
+        **binding,
     }
 
 

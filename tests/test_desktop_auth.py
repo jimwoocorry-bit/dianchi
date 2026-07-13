@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import base64
+import hashlib
+import hmac
 import json
 import os
 import time
@@ -10,6 +13,7 @@ from api._desktop_auth import (
     DesktopAuthError,
     desktop_authorize_url,
     exchange_handoff,
+    issue_desktop_binding_assertion,
     issue_handoff,
     rotate_refresh,
 )
@@ -70,6 +74,43 @@ def active_resolution() -> dict:
 
 
 class DesktopAuthTests(unittest.TestCase):
+    def test_binding_assertion_contains_signed_stable_employee_identity(self) -> None:
+        with (
+            mock.patch.dict(
+                os.environ,
+                {"DESKTOP_BINDING_SECRET": "binding-secret"},
+                clear=False,
+            ),
+            mock.patch("api._desktop_auth.secrets.token_hex", return_value="nonce-1"),
+            mock.patch("api._desktop_auth.time.time", return_value=1000),
+        ):
+            result = issue_desktop_binding_assertion(
+                EMPLOYEE,
+                IDENTITY,
+                installation_id="install-a",
+            )
+
+        body, signature = result["desktop_assertion"].split(".", 1)
+        expected = hmac.new(
+            b"binding-secret",
+            body.encode("ascii"),
+            hashlib.sha256,
+        ).digest()
+        payload = json.loads(
+            base64.urlsafe_b64decode(body + "=" * (-len(body) % 4))
+        )
+        self.assertTrue(
+            hmac.compare_digest(
+                base64.urlsafe_b64decode(signature + "=" * (-len(signature) % 4)),
+                expected,
+            )
+        )
+        self.assertEqual(payload["employee_id"], "emp_1")
+        self.assertEqual(payload["feishu_open_id"], "ou_1")
+        self.assertEqual(payload["desktop_session_id"], result["desktop_session_id"])
+        self.assertEqual(payload["nonce"], "nonce-1")
+        self.assertEqual(payload["exp"] - payload["iat"], 60)
+
     def test_handoff_is_one_time_and_refresh_rotates(self) -> None:
         kv = MemoryKv()
         with (
