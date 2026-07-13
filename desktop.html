@@ -138,7 +138,6 @@
       const downloadLink = document.querySelector("[data-download]");
       const retryButton = document.querySelector("[data-retry]");
       const loginLink = document.querySelector("[data-login]");
-      let downloadStarted = false;
 
       function setState(state, text) {
         if (!statusEl) return;
@@ -204,18 +203,12 @@
         downloadLink.href = release.artifact.url;
         downloadLink.textContent = `下载 ${target.label} v${release.version}`;
         downloadLink.hidden = false;
-        if (!downloadStarted) {
-          downloadStarted = true;
-          downloadLink.click();
-        }
-        await sleep(1500);
-        setState("download-blocked", "安装包已请求下载；如果浏览器没有开始下载，请点击下方按钮重试。安装完成后返回本页重新检测。");
+        setState("download-ready", `未检测到已安装客户端，请点击下方按钮下载 ${target.label} 安装包。`);
         retryButton.hidden = false;
       }
 
       async function bootstrapDesktop() {
         resetActions();
-        downloadStarted = false;
         setState("checking-login", "正在检查飞书员工登录状态...");
         try {
           const me = await requestJson("/api/me");
@@ -263,6 +256,9 @@
 
       openLink.addEventListener("click", () => {
         setState("opening-installed", "正在安全授权并打开巅池桌面助手...");
+      });
+      downloadLink.addEventListener("click", () => {
+        setState("downloading-installer", "浏览器正在下载安装包；安装完成后请返回本页重新检测。");
       });
       retryButton.addEventListener("click", bootstrapDesktop);
 

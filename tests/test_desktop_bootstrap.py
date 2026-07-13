@@ -146,11 +146,13 @@ class DesktopReleaseTests(unittest.TestCase):
             "probing",
             "opening-installed",
             "downloading-installer",
+            "download-ready",
             "download-blocked",
             "service-unavailable",
         ]:
             self.assertIn(state, source)
         self.assertIn("dianchi://probe?probe_id=", source)
+        self.assertNotIn("downloadLink.click()", source)
         self.assertNotIn("扫描已安装程序", source)
         self.assertNotIn("自动运行安装包", source)
 
