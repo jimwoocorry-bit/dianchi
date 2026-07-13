@@ -1,1 +1,0 @@
-"""Authenticated desktop release publication."""

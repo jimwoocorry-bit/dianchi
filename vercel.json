@@ -1,6 +1,42 @@
 {
   "rewrites": [
     {
+      "source": "/api/desktop/exchange",
+      "destination": "/api/desktop?route=exchange"
+    },
+    {
+      "source": "/api/desktop/latest",
+      "destination": "/api/desktop?route=latest"
+    },
+    {
+      "source": "/api/desktop/open",
+      "destination": "/api/desktop?route=open"
+    },
+    {
+      "source": "/api/desktop/probe/start",
+      "destination": "/api/desktop?route=probe-start"
+    },
+    {
+      "source": "/api/desktop/probe/status",
+      "destination": "/api/desktop?route=probe-status"
+    },
+    {
+      "source": "/api/desktop/probe/heartbeat",
+      "destination": "/api/desktop?route=probe-heartbeat"
+    },
+    {
+      "source": "/api/desktop/refresh",
+      "destination": "/api/desktop?route=refresh"
+    },
+    {
+      "source": "/api/internal/desktop/release",
+      "destination": "/api/desktop?route=release-sync"
+    },
+    {
+      "source": "/api/internal/employee-access/sync",
+      "destination": "/api/desktop?route=employee-sync"
+    },
+    {
       "source": "/auth/feishu/start",
       "destination": "/api/auth/feishu/start"
     },

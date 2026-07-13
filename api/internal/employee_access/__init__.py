@@ -1,1 +1,0 @@
-"""Employee authorization mirror synchronization."""
