@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
+import os
 import re
 from datetime import UTC, datetime
 from typing import Any
@@ -120,7 +121,7 @@ def artifact_for(
     *,
     manifest: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Select one platform artifact from the stable release manifest.
+    """Select one platform artifact from the configured release manifest.
 
     Args:
         platform: Normalized operating system name.
@@ -135,10 +136,17 @@ def artifact_for(
         RuntimeError: If persistent Redis is unavailable.
     """
     artifact_key = f"{platform.strip().lower()}-{architecture.strip().lower()}"
+    selected_channel: str | None = None
     if artifact_key not in PLATFORM_ARTIFACTS:
         raise DesktopReleaseError("unsupported_platform")
     if manifest is None:
-        raw_manifest = _kv.get_value(f"{RELEASE_KEY_PREFIX}stable", strict=True)
+        selected_channel = os.getenv("DESKTOP_RELEASE_CHANNEL", "stable").strip().lower()
+        if selected_channel not in {"stable", "gray"}:
+            raise DesktopReleaseError("invalid_release_channel_config")
+        raw_manifest = _kv.get_value(
+            f"{RELEASE_KEY_PREFIX}{selected_channel}",
+            strict=True,
+        )
         if not raw_manifest:
             raise DesktopReleaseError("release_missing")
         try:
@@ -146,6 +154,8 @@ def artifact_for(
         except json.JSONDecodeError as exc:
             raise DesktopReleaseError("release_invalid") from exc
     validate_release_manifest(manifest)
+    if selected_channel is not None and manifest["channel"] != selected_channel:
+        raise DesktopReleaseError("release_channel_mismatch")
     artifact = manifest["artifacts"].get(artifact_key)
     if not artifact:
         raise DesktopReleaseError("release_missing_for_platform")

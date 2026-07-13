@@ -85,6 +85,25 @@ class DesktopReleaseTests(unittest.TestCase):
         self.assertEqual(result["version"], "0.2.0")
         self.assertTrue(result["artifact"]["url"].endswith("Setup.exe"))
 
+    def test_configured_gray_channel_is_loaded_from_redis(self) -> None:
+        manifest = release_manifest()
+        manifest["channel"] = "gray"
+
+        with (
+            mock.patch.dict("os.environ", {"DESKTOP_RELEASE_CHANNEL": "gray"}),
+            mock.patch(
+                "api._desktop_release._kv.get_value",
+                return_value=json.dumps(manifest),
+            ) as get_value,
+        ):
+            result = artifact_for("macos", "arm64")
+
+        get_value.assert_called_once_with(
+            "dianchi:desktop:release:gray",
+            strict=True,
+        )
+        self.assertEqual(result["channel"], "gray")
+
     def test_manifest_rejects_integrity_path_and_signature_errors(self) -> None:
         invalid_sha = release_manifest()
         invalid_sha["artifacts"]["windows-x64"]["sha256"] = "bad"
