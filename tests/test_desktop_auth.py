@@ -43,6 +43,15 @@ IDENTITY = {
     "feishu_union_id": "on_1",
     "feishu_user_id": "u_1",
 }
+PERMISSIONS = [
+    {
+        "subject_id": "ou_1",
+        "subject_type": "user",
+        "permission": "dc_admin",
+        "scope": "*",
+        "enabled": True,
+    }
+]
 ACTIVE_AUTH = {
     "logged_in": True,
     "allowed": True,
@@ -50,6 +59,7 @@ ACTIVE_AUTH = {
     "user": USER,
     "employee": EMPLOYEE,
     "identity": IDENTITY,
+    "permissions": PERMISSIONS,
 }
 
 
@@ -70,6 +80,7 @@ def active_resolution() -> dict:
         "reason": "ok",
         "employee": EMPLOYEE,
         "identity": IDENTITY,
+        "permissions": PERMISSIONS,
     }
 
 
@@ -96,9 +107,7 @@ class DesktopAuthTests(unittest.TestCase):
             body.encode("ascii"),
             hashlib.sha256,
         ).digest()
-        payload = json.loads(
-            base64.urlsafe_b64decode(body + "=" * (-len(body) % 4))
-        )
+        payload = json.loads(base64.urlsafe_b64decode(body + "=" * (-len(body) % 4)))
         self.assertTrue(
             hmac.compare_digest(
                 base64.urlsafe_b64decode(signature + "=" * (-len(signature) % 4)),
@@ -152,9 +161,11 @@ class DesktopAuthTests(unittest.TestCase):
         self.assertEqual(first["session"], "session-one")
         self.assertEqual(first["refresh_token"], "refresh-one")
         self.assertEqual(first["employee"]["employee_id"], "emp_1")
+        self.assertEqual(first["permissions"], PERMISSIONS)
         self.assertEqual(first["pet_api_url"], "http://192.168.1.35/pet")
         self.assertEqual(rotated["session"], "session-two")
         self.assertEqual(rotated["refresh_token"], "refresh-two")
+        self.assertEqual(rotated["permissions"], PERMISSIONS)
 
     def test_expired_handoff_is_rejected(self) -> None:
         kv = MemoryKv()

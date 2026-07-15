@@ -19,6 +19,7 @@ class handler(BaseHTTPRequestHandler):
             "user": user,
             "employee": auth["employee"],
             "identity": auth["identity"],
+            "permissions": auth["permissions"],
             "activated": _wallet.is_activated(user["open_id"])
             if auth["allowed"] and user
             else False,

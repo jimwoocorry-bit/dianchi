@@ -1,0 +1,1579 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>DC-Agent</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --page: #ffffff;
+        --sidebar: #f7f7f5;
+        --sidebar-hover: #ecebe8;
+        --ink: #1f1f1f;
+        --muted: #6b6f76;
+        --soft: #8a8f98;
+        --line: #e4e4df;
+        --line-strong: #d3d3cc;
+        --chip: #f4f4f1;
+        --accent: #0f8f7f;
+        --accent-dark: #0b6f63;
+        --danger: #b42318;
+        --warning: #9a5b00;
+        --warning-bg: #fff5d8;
+        --assistant: #ffffff;
+        --user: #f3f3ef;
+        --shadow: 0 12px 38px rgba(0, 0, 0, 0.08);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        height: 100%;
+      }
+
+      body {
+        margin: 0;
+        background: var(--page);
+        color: var(--ink);
+        font-family:
+          "PingFang SC",
+          "Microsoft YaHei",
+          "Noto Sans CJK SC",
+          system-ui,
+          sans-serif;
+      }
+
+      button,
+      textarea {
+        font: inherit;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .app {
+        min-height: 100vh;
+        display: grid;
+        grid-template-columns: 268px minmax(0, 1fr);
+        background: var(--page);
+      }
+
+      .sidebar {
+        min-height: 100vh;
+        display: grid;
+        grid-template-rows: auto auto 1fr auto;
+        gap: 14px;
+        padding: 12px;
+        border-right: 1px solid var(--line);
+        background: var(--sidebar);
+      }
+
+      .side-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 40px;
+        gap: 8px;
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        min-width: 0;
+        padding: 4px 6px;
+        border-radius: 10px;
+      }
+
+      .brand img {
+        width: 25px;
+        height: 25px;
+        object-fit: contain;
+      }
+
+      .brand span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 15px;
+        font-weight: 700;
+      }
+
+      .icon-button {
+        display: inline-grid;
+        place-items: center;
+        width: 34px;
+        height: 34px;
+        border: 0;
+        border-radius: 10px;
+        background: transparent;
+        color: #50545b;
+        cursor: pointer;
+        font-size: 18px;
+        line-height: 1;
+      }
+
+      .icon-button:hover {
+        background: var(--sidebar-hover);
+      }
+
+      .new-chat {
+        min-height: 42px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        border: 0;
+        border-radius: 10px;
+        padding: 0 10px;
+        background: transparent;
+        color: #2d3035;
+        text-align: left;
+        cursor: pointer;
+        font-weight: 650;
+      }
+
+      .new-chat:hover {
+        background: var(--sidebar-hover);
+      }
+
+      .new-chat .mark {
+        display: grid;
+        place-items: center;
+        width: 24px;
+        height: 24px;
+        border-radius: 8px;
+        background: #ffffff;
+        border: 1px solid var(--line);
+      }
+
+      .conversation-list {
+        min-height: 0;
+        overflow: auto;
+        display: grid;
+        align-content: start;
+        gap: 2px;
+        padding: 4px 0;
+      }
+
+      .conversation-empty {
+        padding: 10px;
+        color: var(--soft);
+        font-size: 13px;
+        line-height: 1.6;
+      }
+
+      .conversation-button {
+        width: 100%;
+        min-height: 38px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 8px;
+        border: 0;
+        border-radius: 10px;
+        padding: 0 10px;
+        background: transparent;
+        color: #383b40;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .conversation-button:hover,
+      .conversation-button.is-active {
+        background: var(--sidebar-hover);
+      }
+
+      .conversation-button strong {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 14px;
+        font-weight: 520;
+      }
+
+      .conversation-button small {
+        color: var(--soft);
+        font-size: 11px;
+      }
+
+      .account {
+        display: grid;
+        gap: 8px;
+        padding-top: 10px;
+        border-top: 1px solid var(--line);
+      }
+
+      .account-main {
+        min-height: 40px;
+        display: grid;
+        grid-template-columns: 32px minmax(0, 1fr);
+        gap: 9px;
+        align-items: center;
+        padding: 4px 6px;
+      }
+
+      .account-avatar {
+        display: grid;
+        place-items: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 999px;
+        background: #e8fff9;
+        color: #07554b;
+        font-size: 12px;
+        font-weight: 900;
+      }
+
+      .account-name {
+        min-width: 0;
+      }
+
+      .account-name strong,
+      .account-name span {
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .account-name strong {
+        font-size: 13px;
+      }
+
+      .account-name span {
+        margin-top: 2px;
+        color: var(--soft);
+        font-size: 12px;
+      }
+
+      .logout {
+        min-height: 34px;
+        display: grid;
+        place-items: center;
+        border-radius: 10px;
+        color: #555961;
+        font-size: 13px;
+      }
+
+      .logout:hover {
+        background: var(--sidebar-hover);
+      }
+
+      .main {
+        min-width: 0;
+        min-height: 100vh;
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr) auto;
+        background: var(--page);
+      }
+
+      .topbar {
+        min-height: 56px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 10px 22px;
+      }
+
+      .model-switch {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        min-height: 36px;
+        border: 0;
+        border-radius: 10px;
+        padding: 0 11px;
+        background: transparent;
+        color: #34363a;
+        cursor: default;
+        font-weight: 650;
+      }
+
+      .model-switch span {
+        color: var(--soft);
+        font-size: 13px;
+        font-weight: 500;
+      }
+
+      .top-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .status-pill,
+      .login-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 34px;
+        border-radius: 999px;
+        padding: 0 13px;
+        font-size: 13px;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+
+      .status-pill {
+        border: 1px solid var(--line);
+        color: var(--muted);
+        background: #fff;
+      }
+
+      .status-pill.ok {
+        border-color: rgba(15, 143, 127, 0.22);
+        background: #ecfbf7;
+        color: var(--accent-dark);
+      }
+
+      .status-pill.warn {
+        border-color: rgba(154, 91, 0, 0.22);
+        background: var(--warning-bg);
+        color: var(--warning);
+      }
+
+      .login-link {
+        background: var(--ink);
+        color: #fff;
+      }
+
+      .login-link:hover {
+        background: #000;
+      }
+
+      .messages {
+        min-height: 0;
+        overflow: auto;
+        padding: 8px 22px 18px;
+      }
+
+      .message-stack {
+        width: min(820px, 100%);
+        margin: 0 auto;
+        display: grid;
+        gap: 18px;
+        padding: 10px 0 30px;
+      }
+
+      .message {
+        display: grid;
+        grid-template-columns: 34px minmax(0, 1fr);
+        gap: 12px;
+        align-items: start;
+      }
+
+      .message.user {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .message.user .message-avatar {
+        display: none;
+      }
+
+      .message-avatar {
+        display: grid;
+        place-items: center;
+        width: 34px;
+        height: 34px;
+        border-radius: 999px;
+        background: #111;
+        color: #fff;
+        font-size: 12px;
+        font-weight: 900;
+      }
+
+      .message-body {
+        max-width: 720px;
+        padding: 3px 0;
+        line-height: 1.78;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+
+      .message.user .message-body {
+        justify-self: end;
+        max-width: min(620px, 86%);
+        border-radius: 22px;
+        padding: 10px 15px;
+        background: var(--user);
+      }
+
+      .message-attachments {
+        display: grid;
+        gap: 10px;
+        margin-top: 10px;
+      }
+
+      .message-image-link {
+        display: block;
+        width: min(360px, 100%);
+        border-radius: 14px;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        background: #f8f8f6;
+      }
+
+      .message-image {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+
+      .image-board {
+        width: min(420px, 100%);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        overflow: hidden;
+        background: #fbfbf8;
+      }
+
+      .image-board.is-error {
+        border-color: rgba(180, 35, 24, 0.25);
+        background: #fff8f6;
+      }
+
+      .image-board-canvas {
+        position: relative;
+        aspect-ratio: 1 / 1;
+        background:
+          radial-gradient(circle at 26% 24%, rgba(15, 143, 127, 0.16), transparent 26%),
+          radial-gradient(circle at 72% 66%, rgba(154, 91, 0, 0.12), transparent 28%),
+          linear-gradient(135deg, #f7f3eb, #ffffff 52%, #eef8f5);
+      }
+
+      .image-board-canvas::before {
+        content: "";
+        position: absolute;
+        inset: 12%;
+        border-radius: 28px;
+        border: 1px dashed rgba(31, 31, 31, 0.16);
+        background:
+          linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.72), transparent);
+        background-size: 220% 100%;
+        animation: boardSweep 1.8s infinite linear;
+      }
+
+      .image-board-canvas::after {
+        content: "";
+        position: absolute;
+        left: 18%;
+        right: 18%;
+        bottom: 22%;
+        height: 22%;
+        border-radius: 999px 999px 26px 26px;
+        background: rgba(15, 143, 127, 0.13);
+        filter: blur(1px);
+      }
+
+      .image-board.has-image .image-board-canvas {
+        background: #f8f8f6;
+      }
+
+      .image-board.has-image .image-board-canvas::before,
+      .image-board.has-image .image-board-canvas::after {
+        display: none;
+      }
+
+      .image-board img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
+
+      .image-board-meta {
+        display: grid;
+        gap: 6px;
+        padding: 12px 14px 13px;
+      }
+
+      .image-board-title {
+        font-size: 13px;
+        font-weight: 750;
+      }
+
+      .image-board-status {
+        color: var(--soft);
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .image-board-progress {
+        height: 4px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: var(--line);
+      }
+
+      .image-board-progress span {
+        display: block;
+        width: 42%;
+        height: 100%;
+        border-radius: inherit;
+        background: var(--accent);
+        animation: boardProgress 1.4s infinite ease-in-out;
+      }
+
+      .image-board.has-image .image-board-progress span {
+        width: 100%;
+        animation: none;
+      }
+
+      .image-board.is-error .image-board-progress span {
+        width: 100%;
+        animation: none;
+        background: #b42318;
+      }
+
+      @keyframes boardSweep {
+        from {
+          background-position: 220% 0;
+        }
+
+        to {
+          background-position: -220% 0;
+        }
+      }
+
+      @keyframes boardProgress {
+        0% {
+          transform: translateX(-105%);
+        }
+
+        55% {
+          transform: translateX(70%);
+        }
+
+        100% {
+          transform: translateX(240%);
+        }
+      }
+
+      .message.pending .message-body {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--soft);
+      }
+
+      .typing-dot {
+        width: 5px;
+        height: 5px;
+        border-radius: 999px;
+        background: currentColor;
+        opacity: 0.42;
+        animation: typingPulse 1.1s infinite ease-in-out;
+      }
+
+      .typing-dot:nth-child(2) {
+        animation-delay: 0.16s;
+      }
+
+      .typing-dot:nth-child(3) {
+        animation-delay: 0.32s;
+      }
+
+      @keyframes typingPulse {
+        0%,
+        80%,
+        100% {
+          transform: translateY(0);
+          opacity: 0.32;
+        }
+
+        40% {
+          transform: translateY(-3px);
+          opacity: 0.9;
+        }
+      }
+
+      .hero {
+        width: min(820px, 100%);
+        min-height: calc(100vh - 260px);
+        margin: 0 auto;
+        display: grid;
+        align-content: center;
+        gap: 24px;
+        padding-bottom: 4vh;
+      }
+
+      .hero h1 {
+        margin: 0;
+        color: #222;
+        font-size: clamp(28px, 4vw, 36px);
+        line-height: 1.24;
+        text-align: center;
+        letter-spacing: 0;
+        font-weight: 680;
+      }
+
+      .hero p {
+        margin: 0 auto;
+        max-width: 620px;
+        color: var(--muted);
+        line-height: 1.75;
+        text-align: center;
+      }
+
+      .suggestions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .suggestion {
+        min-height: 58px;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 13px 14px;
+        background: #fff;
+        color: #33363a;
+        text-align: left;
+        cursor: pointer;
+        line-height: 1.5;
+      }
+
+      .suggestion:hover {
+        background: #fbfbf9;
+        border-color: var(--line-strong);
+      }
+
+      .gate-note {
+        justify-self: center;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border-radius: 999px;
+        padding: 7px 11px;
+        background: var(--warning-bg);
+        color: var(--warning);
+        font-size: 13px;
+        font-weight: 650;
+      }
+
+      .composer-wrap {
+        padding: 12px 22px 22px;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0), var(--page) 30%);
+      }
+
+      .composer-shell {
+        width: min(820px, 100%);
+        margin: 0 auto;
+        display: grid;
+        gap: 8px;
+      }
+
+      .composer {
+        min-height: 62px;
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto auto;
+        gap: 8px;
+        align-items: end;
+        border: 1px solid var(--line-strong);
+        border-radius: 30px;
+        padding: 9px 10px 9px 13px;
+        background: #fff;
+        box-shadow: var(--shadow);
+      }
+
+      .tool-button,
+      .send {
+        display: inline-grid;
+        place-items: center;
+        width: 40px;
+        height: 40px;
+        border: 0;
+        border-radius: 999px;
+        cursor: pointer;
+      }
+
+      .tool-button {
+        background: transparent;
+        color: #5e636b;
+        font-size: 21px;
+      }
+
+      .tool-button:hover {
+        background: var(--chip);
+      }
+
+      .composer textarea {
+        width: 100%;
+        max-height: 180px;
+        min-height: 40px;
+        resize: none;
+        border: 0;
+        outline: 0;
+        padding: 9px 4px;
+        color: var(--ink);
+        background: transparent;
+        line-height: 1.55;
+        font-size: 15px;
+      }
+
+      .send {
+        background: var(--ink);
+        color: #fff;
+        font-size: 18px;
+        font-weight: 900;
+      }
+
+      .send:disabled {
+        cursor: not-allowed;
+        background: #d0d0ca;
+      }
+
+      .composer-meta {
+        min-height: 18px;
+        color: var(--soft);
+        font-size: 12px;
+        text-align: center;
+      }
+
+      @media (max-width: 860px) {
+        .app {
+          grid-template-columns: 1fr;
+        }
+
+        .sidebar {
+          min-height: auto;
+          grid-template-rows: auto auto;
+          border-right: 0;
+          border-bottom: 1px solid var(--line);
+        }
+
+        .conversation-list,
+        .account {
+          display: none;
+        }
+
+        .main {
+          min-height: calc(100vh - 108px);
+        }
+
+        .messages {
+          padding: 4px 14px 16px;
+        }
+
+        .topbar {
+          padding: 10px 14px;
+        }
+
+        .model-switch span {
+          display: none;
+        }
+
+        .suggestions {
+          grid-template-columns: 1fr;
+        }
+
+        .composer-wrap {
+          padding: 10px 12px 14px;
+        }
+
+        .composer {
+          border-radius: 24px;
+          grid-template-columns: minmax(0, 1fr) auto;
+        }
+
+        .composer .tool-button {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <aside class="sidebar">
+        <div class="side-top">
+          <a class="brand" href="/agent.html" aria-label="DC-Agent">
+            <img src="/docs/grey_test_video/dianchi-logo-animated.video.loop.svg" alt="" />
+            <span>DC-Agent</span>
+          </a>
+          <button class="icon-button" type="button" aria-label="收起侧边栏">☰</button>
+        </div>
+
+        <button class="new-chat" type="button" data-new-chat>
+          <span class="mark">+</span>
+          <span>新对话</span>
+        </button>
+
+        <nav class="conversation-list" data-conversations aria-label="最近对话">
+          <div class="conversation-empty">登录后显示最近会话。</div>
+        </nav>
+
+        <section class="account" aria-label="账号">
+          <div class="account-main">
+            <div class="account-avatar" data-account-avatar>DC</div>
+            <div class="account-name">
+              <strong data-account-name>未登录</strong>
+              <span data-account-meta>飞书 OAuth</span>
+            </div>
+          </div>
+          <a class="logout" href="/api/auth/logout">退出登录</a>
+        </section>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div class="model-switch" aria-label="当前模型">
+            DC-Agent <span>员工版</span>
+          </div>
+          <div class="top-actions">
+            <span class="status-pill" data-status>检查登录</span>
+            <a class="login-link" data-login-link href="/api/auth/feishu/start?app=agent&next=/agent.html">飞书登录</a>
+          </div>
+        </header>
+
+        <section class="messages" data-messages aria-live="polite"></section>
+
+        <section class="composer-wrap">
+          <div class="composer-shell">
+            <form class="composer" data-composer>
+              <button class="tool-button" type="button" aria-label="添加附件">+</button>
+              <textarea data-input rows="1" placeholder="给 DC-Agent 发送消息"></textarea>
+              <button class="tool-button" type="button" aria-label="工具">⌘</button>
+              <button class="send" type="submit" data-send aria-label="发送">↑</button>
+            </form>
+            <div class="composer-meta" data-composer-hint>员工身份通过后即可使用。复杂任务会交给 Hermes 后台执行。</div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      const state = {
+        me: null,
+        conversations: [],
+        activeConversationId: "dc-agent",
+        busy: false,
+        draftBeforeLogin: "",
+      };
+
+      const els = {
+        status: document.querySelector("[data-status]"),
+        loginLink: document.querySelector("[data-login-link]"),
+        accountAvatar: document.querySelector("[data-account-avatar]"),
+        accountName: document.querySelector("[data-account-name]"),
+        accountMeta: document.querySelector("[data-account-meta]"),
+        conversations: document.querySelector("[data-conversations]"),
+        messages: document.querySelector("[data-messages]"),
+        composer: document.querySelector("[data-composer]"),
+        input: document.querySelector("[data-input]"),
+        send: document.querySelector("[data-send]"),
+        hint: document.querySelector("[data-composer-hint]"),
+        newChat: document.querySelector("[data-new-chat]"),
+      };
+
+      function setStatus(text, tone = "") {
+        els.status.textContent = text;
+        els.status.classList.toggle("ok", tone === "ok");
+        els.status.classList.toggle("warn", tone === "warn");
+      }
+
+      function setComposerEnabled(enabled) {
+        els.input.disabled = false;
+        els.send.disabled = !enabled;
+      }
+
+      function initials(name) {
+        const text = (name || "DC").trim();
+        const chars = Array.from(text);
+        if (!chars.length) return "DC";
+        if (/[\u3400-\u9fff]/.test(chars[0])) return chars[0];
+        return chars.slice(0, 2).join("").toUpperCase();
+      }
+
+      function roleLabel(role) {
+        const labels = {
+          admin: "管理员",
+          manager: "负责人",
+          employee: "员工",
+        };
+        return labels[role] || role || "员工";
+      }
+
+      function clearMessages() {
+        els.messages.replaceChildren();
+      }
+
+      function createSuggestion(text) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "suggestion";
+        button.textContent = text;
+        button.addEventListener("click", () => {
+          els.input.value = text;
+          autosizeInput();
+          els.input.focus();
+        });
+        return button;
+      }
+
+      function renderHero(mode = "ready") {
+        clearMessages();
+        const hero = document.createElement("div");
+        hero.className = "hero";
+
+        const h1 = document.createElement("h1");
+        if (mode === "login") {
+          h1.textContent = "今天想让 DC-Agent 做什么？";
+        } else if (mode === "pending") {
+          h1.textContent = "账号还没有启用";
+        } else {
+          h1.textContent = "今天想让 DC-Agent 做什么？";
+        }
+
+        const p = document.createElement("p");
+        if (mode === "login") {
+          p.textContent = "先输入你的需求也可以，发送时会跳转飞书登录。登录后系统会用本地员工表确认公司身份。";
+        } else if (mode === "pending") {
+          const status = state.me?.employee?.status || state.me?.auth_status || "pending";
+          p.textContent = `飞书登录已完成，但员工账号当前是 ${status}。管理员启用后才能使用。`;
+        } else {
+          p.textContent = "整理需求、拆任务、查知识库、写脚本、生成交付清单，都从这里开始。";
+        }
+
+        const suggestions = document.createElement("div");
+        suggestions.className = "suggestions";
+        [
+          "把今天客户需求整理成任务清单",
+          "根据飞书文档总结项目复盘",
+          "写一版短视频脚本文案",
+          "检查 DC-Agent 和 Hermes 状态",
+        ].forEach((text) => suggestions.append(createSuggestion(text)));
+
+        hero.append(h1, p);
+        if (mode === "pending") {
+          const note = document.createElement("div");
+          note.className = "gate-note";
+          note.textContent = "需要管理员在员工表启用";
+          hero.append(note);
+        } else {
+          hero.append(suggestions);
+        }
+        els.messages.append(hero);
+      }
+
+      function renderConversationList() {
+        els.conversations.replaceChildren();
+        if (!state.conversations.length) {
+          const empty = document.createElement("div");
+          empty.className = "conversation-empty";
+          empty.textContent = state.me?.logged_in ? "暂无最近对话。" : "登录后显示最近对话。";
+          els.conversations.append(empty);
+          return;
+        }
+
+        state.conversations.forEach((conversation) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "conversation-button";
+          button.classList.toggle("is-active", conversation.id === state.activeConversationId);
+          button.addEventListener("click", () => selectConversation(conversation.id));
+
+          const title = document.createElement("strong");
+          title.textContent = conversation.title;
+          const tag = document.createElement("small");
+          tag.textContent = conversation.tag || conversation.subtitle || "";
+          button.append(title, tag);
+          els.conversations.append(button);
+        });
+      }
+
+      function activeConversation() {
+        return state.conversations.find((item) => item.id === state.activeConversationId);
+      }
+
+      function updateUiState() {
+        const conversation = activeConversation();
+        const readOnly = Boolean(conversation?.read_only);
+        const allowed = Boolean(state.me?.allowed);
+        const canSend = !state.busy && !readOnly && (allowed || !state.me?.logged_in);
+        setComposerEnabled(canSend);
+        if (!state.me?.logged_in) {
+          els.hint.textContent = "发送前会先进行飞书登录。";
+        } else if (!allowed) {
+          els.hint.textContent = "账号启用后即可发送消息。";
+        } else {
+          els.hint.textContent = "DC-Agent 可能会出错，请核对重要信息。复杂任务会交给 Hermes 后台执行。";
+        }
+      }
+
+      function renderMessages(items) {
+        clearMessages();
+        if (!items.length) {
+          renderHero("ready");
+          return;
+        }
+        const stack = document.createElement("div");
+        stack.className = "message-stack";
+        items.forEach((item) => stack.append(createMessage(item)));
+        els.messages.append(stack);
+        els.messages.scrollTop = els.messages.scrollHeight;
+      }
+
+      function ensureMessageStack() {
+        let stack = els.messages.querySelector(".message-stack");
+        if (!stack) {
+          clearMessages();
+          stack = document.createElement("div");
+          stack.className = "message-stack";
+          els.messages.append(stack);
+        }
+        return stack;
+      }
+
+      function appendLocalMessage(item) {
+        const stack = ensureMessageStack();
+        const node = createMessage(item);
+        if (item.id) node.dataset.messageId = item.id;
+        stack.append(node);
+        els.messages.scrollTop = els.messages.scrollHeight;
+        return node;
+      }
+
+      function replaceLocalMessage(id, item) {
+        const current = els.messages.querySelector(`[data-message-id="${id}"]`);
+        if (!current) return appendLocalMessage(item);
+        const node = createMessage(item);
+        if (item.id) node.dataset.messageId = item.id;
+        current.replaceWith(node);
+        els.messages.scrollTop = els.messages.scrollHeight;
+        return node;
+      }
+
+      function createMessage(item) {
+        const row = document.createElement("article");
+        row.className = `message ${item.role === "user" ? "user" : "assistant"}`;
+        if (item.pending) row.classList.add("pending");
+        const avatar = document.createElement("div");
+        avatar.className = "message-avatar";
+        avatar.textContent = item.role === "user"
+          ? initials(state.me?.employee?.display_name || state.me?.user?.name)
+          : "AI";
+        const body = document.createElement("div");
+        body.className = "message-body";
+        if (item.pending) {
+          const label = document.createElement("span");
+          label.textContent = item.content || "DC-Agent 正在思考";
+          body.append(label, typingDot(), typingDot(), typingDot());
+        } else {
+          if (item.content) body.append(document.createTextNode(item.content));
+          renderAttachments(body, item.attachments || []);
+        }
+        row.append(avatar, body);
+        return row;
+      }
+
+      function renderAttachments(container, attachments) {
+        const boardUrls = new Set(
+          attachments
+            .filter((item) => item && item.type === "image_board" && item.url)
+            .map((item) => item.url),
+        );
+        const visible = attachments.filter((item) => {
+          if (!item) return false;
+          if (item.type === "image_board") return true;
+          return item.type === "image" && item.url && !boardUrls.has(item.url);
+        });
+        if (!visible.length) return;
+        const wrap = document.createElement("div");
+        wrap.className = "message-attachments";
+        visible.forEach((item) => {
+          if (item.type === "image_board") {
+            wrap.append(createImageBoard(item));
+          } else {
+            wrap.append(createImageLink(item));
+          }
+        });
+        container.append(wrap);
+      }
+
+      function createImageLink(item) {
+        const link = document.createElement("a");
+        link.className = "message-image-link";
+        link.href = item.url;
+        link.target = "_blank";
+        link.rel = "noreferrer";
+        const image = document.createElement("img");
+        image.className = "message-image";
+        image.src = item.url;
+        image.alt = item.filename || "生成图片";
+        link.append(image);
+        return link;
+      }
+
+      function createImageBoard(item) {
+        const board = document.createElement("div");
+        board.className = "image-board";
+        if (item.url) board.classList.add("has-image");
+        if (item.state === "error") board.classList.add("is-error");
+
+        const canvas = document.createElement("div");
+        canvas.className = "image-board-canvas";
+        if (item.url) {
+          const link = document.createElement("a");
+          link.href = item.url;
+          link.target = "_blank";
+          link.rel = "noreferrer";
+          const image = document.createElement("img");
+          image.src = item.url;
+          image.alt = item.filename || "生成图片";
+          link.append(image);
+          canvas.append(link);
+        }
+
+        const meta = document.createElement("div");
+        meta.className = "image-board-meta";
+        const title = document.createElement("div");
+        title.className = "image-board-title";
+        title.textContent = item.title || "即梦生图画板";
+        const status = document.createElement("div");
+        status.className = "image-board-status";
+        status.textContent = item.status || (item.url ? "图片已生成，点击可查看原图。" : "正在生成图片...");
+        const progress = document.createElement("div");
+        progress.className = "image-board-progress";
+        progress.append(document.createElement("span"));
+        meta.append(title, status, progress);
+        board.append(canvas, meta);
+        return board;
+      }
+
+      function looksLikeImageRequest(text) {
+        return /(即梦|dreamina|生图|文生图|图生图|出图|画图|画一张|画个|生成.*(图片|图像|插画|海报|照片)|image\s*2|gpt\s*image)/i.test(text || "");
+      }
+
+      function looksLikeImageStatus(text) {
+        return /(即梦|dreamina|生图|图片|图像|生成图|画板|image)/i.test(text || "");
+      }
+
+      function typingDot() {
+        const dot = document.createElement("span");
+        dot.className = "typing-dot";
+        return dot;
+      }
+
+      async function readSseStream(response, onEvent) {
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+        let shouldStop = false;
+        try {
+          while (!shouldStop) {
+            const { value, done } = await reader.read();
+            buffer += decoder.decode(value || new Uint8Array(), { stream: !done });
+            const blocks = buffer.split("\n\n");
+            buffer = blocks.pop() || "";
+            for (const block of blocks) {
+              if (parseSseBlock(block, onEvent) === false) {
+                shouldStop = true;
+                break;
+              }
+            }
+            if (done) break;
+          }
+          if (!shouldStop && buffer.trim()) parseSseBlock(buffer, onEvent);
+        } finally {
+          if (shouldStop) {
+            try {
+              await reader.cancel();
+            } catch {
+              // The stream may already be closed by the server.
+            }
+          }
+        }
+      }
+
+      function parseSseBlock(block, onEvent) {
+        const data = block
+          .split(/\r?\n/)
+          .filter((line) => line.startsWith("data:"))
+          .map((line) => line.slice(5).trimStart())
+          .join("\n")
+          .trim();
+        if (!data) return true;
+        try {
+          return onEvent(JSON.parse(data));
+        } catch (error) {
+          console.error(error);
+          return true;
+        }
+      }
+
+      async function loadMe() {
+        const response = await fetch("/api/me", { credentials: "same-origin" });
+        if (!response.ok) throw new Error("me_failed");
+        state.me = await response.json();
+        return state.me;
+      }
+
+      async function loadConversations() {
+        const response = await fetch("/api/workspace/conversations", { credentials: "same-origin" });
+        if (response.status === 401) throw new Error("not_logged_in");
+        if (response.status === 403) throw new Error("employee_not_allowed");
+        if (!response.ok) throw new Error("conversations_failed");
+        const data = await response.json();
+        state.conversations = data.conversations || [];
+        if (!state.conversations.some((item) => item.id === state.activeConversationId)) {
+          state.activeConversationId = state.conversations[0]?.id || "dc-agent";
+        }
+        renderConversationList();
+        updateUiState();
+      }
+
+      async function loadMessages() {
+        const query = new URLSearchParams({ conversation_id: state.activeConversationId });
+        const response = await fetch(`/api/workspace/messages?${query}`, { credentials: "same-origin" });
+        if (!response.ok) throw new Error("messages_failed");
+        const data = await response.json();
+        if (data.conversation_id && data.conversation_id !== state.activeConversationId) {
+          state.activeConversationId = data.conversation_id;
+          renderConversationList();
+        }
+        renderMessages(data.messages || []);
+      }
+
+      async function selectConversation(id) {
+        state.activeConversationId = id;
+        renderConversationList();
+        updateUiState();
+        await loadMessages();
+      }
+
+      async function sendMessage(content) {
+        state.busy = true;
+        updateUiState();
+        const submittedConversationId = state.activeConversationId;
+        const optimisticId = `local-user-${Date.now()}`;
+        const pendingId = `local-assistant-${Date.now()}`;
+        let assistantNode = null;
+        let assistantBody = null;
+        let assistantContent = "";
+        let assistantAttachments = [];
+        let finalConversationId = "";
+        const imageRequested = looksLikeImageRequest(content);
+
+        const mergeAssistantAttachments = (current, incoming) => {
+          const merged = [];
+          const seen = new Set();
+          [...(current || []), ...(incoming || [])].forEach((item) => {
+            if (!item) return;
+            const key = [
+              item.type || "file",
+              item.url || "",
+              item.filename || "",
+              item.attachment_id || "",
+              item.status || "",
+            ].join(":");
+            if (seen.has(key)) return;
+            seen.add(key);
+            merged.push(item);
+          });
+          return merged;
+        };
+
+        const findImageAttachment = () =>
+          assistantAttachments.find((item) => item?.type === "image" && item.url)
+          || assistantAttachments.find((item) => item?.type === "image_board" && item.url);
+
+        const renderAssistantMessage = (item) => {
+          assistantNode = replaceLocalMessage(assistantNode?.dataset.messageId || pendingId, item);
+          assistantBody = assistantNode.querySelector(".message-body");
+          return assistantNode;
+        };
+
+        const ensureAssistantBubble = () => {
+          if (assistantBody) return;
+          assistantNode = renderAssistantMessage({
+            id: `stream-assistant-${Date.now()}`,
+            role: "assistant",
+            content: "",
+            attachments: assistantAttachments,
+            created_at: new Date().toISOString(),
+          });
+        };
+
+        const updateAssistantContent = (text) => {
+          renderAssistantMessage({
+            id: assistantNode?.dataset.messageId || `stream-assistant-${Date.now()}`,
+            role: "assistant",
+            content: text,
+            attachments: assistantAttachments,
+            created_at: new Date().toISOString(),
+          });
+          els.messages.scrollTop = els.messages.scrollHeight;
+        };
+
+        const setImageBoard = (status, updates = {}, shouldRender = true) => {
+          const current = assistantAttachments.find((item) => item?.type === "image_board") || {};
+          const board = {
+            type: "image_board",
+            title: updates.title || current.title || "即梦生图画板",
+            status: status || updates.status || current.status || "正在准备图像生成任务...",
+            state: updates.state || current.state || "running",
+            url: updates.url || current.url || "",
+            filename: updates.filename || current.filename || "",
+          };
+          assistantAttachments = [
+            board,
+            ...assistantAttachments.filter((item) => item?.type !== "image_board"),
+          ];
+          if (!shouldRender) return;
+          updateAssistantContent(assistantContent || updates.content || "正在处理图像生成任务。");
+        };
+
+        const updateAssistantStatus = (text) => {
+          if (imageRequested || looksLikeImageStatus(text)) {
+            setImageBoard(text || "正在调用生图工作流，请稍等...");
+            return;
+          }
+          if (assistantContent || assistantAttachments.length) return;
+          assistantNode = renderAssistantMessage({
+            id: pendingId,
+            role: "assistant",
+            content: text || "DC-Agent 正在处理",
+            created_at: new Date().toISOString(),
+            pending: true,
+          });
+          assistantBody = null;
+        };
+
+        const appendAssistantAttachment = (attachment) => {
+          if (!attachment?.url) return;
+          assistantAttachments = mergeAssistantAttachments(assistantAttachments, [attachment]);
+          if (imageRequested || assistantAttachments.some((item) => item?.type === "image_board")) {
+            setImageBoard(
+              "图片已生成，点击可查看原图。",
+              {
+                state: "done",
+                url: attachment.url,
+                filename: attachment.filename,
+                content: assistantContent || "图片已生成。",
+              },
+            );
+            return;
+          }
+          renderAssistantMessage({
+            id: assistantNode?.dataset.messageId || `stream-assistant-${Date.now()}`,
+            role: "assistant",
+            content: assistantContent || "图片已生成。",
+            attachments: assistantAttachments,
+            created_at: new Date().toISOString(),
+          });
+          els.messages.scrollTop = els.messages.scrollHeight;
+        };
+
+        appendLocalMessage({
+          id: optimisticId,
+          role: "user",
+          content,
+          created_at: new Date().toISOString(),
+        });
+        appendLocalMessage({
+          id: pendingId,
+          role: "assistant",
+          content: "DC-Agent 正在思考",
+          created_at: new Date().toISOString(),
+          pending: true,
+        });
+        if (imageRequested) {
+          setImageBoard("已进入图像生成流程，正在整理画面参数...", {
+            content: "我会为你调用生图工作流。",
+          });
+        }
+        try {
+          const response = await fetch("/api/workspace/messages/stream", {
+            method: "POST",
+            credentials: "same-origin",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              conversation_id: state.activeConversationId,
+              content,
+            }),
+          });
+          if (!response.ok || !response.body) throw new Error("send_failed");
+          await readSseStream(response, (event) => {
+            const data = event.data || {};
+            if (event.type === "start") {
+              finalConversationId = data.conversation_id || finalConversationId;
+              if (data.conversation_id && data.conversation_id !== state.activeConversationId) {
+                state.activeConversationId = data.conversation_id;
+                renderConversationList();
+              }
+            } else if (event.type === "delta") {
+              assistantContent += data.content || "";
+              updateAssistantContent(assistantContent);
+            } else if (event.type === "status") {
+              updateAssistantStatus(data.content);
+            } else if (event.type === "image") {
+              appendAssistantAttachment(data);
+            } else if (event.type === "complete") {
+              finalConversationId = data.conversation_id || finalConversationId;
+              const reply = data.reply || {};
+              assistantContent = reply.content || assistantContent;
+              assistantAttachments = mergeAssistantAttachments(assistantAttachments, reply.attachments || []);
+              const imageAttachment = findImageAttachment();
+              if ((imageRequested || assistantAttachments.some((item) => item?.type === "image_board")) && imageAttachment?.url) {
+                setImageBoard(
+                  "图片已生成，点击可查看原图。",
+                  {
+                    state: "done",
+                    url: imageAttachment.url,
+                    filename: imageAttachment.filename,
+                  },
+                  false,
+                );
+              } else if (imageRequested || assistantAttachments.some((item) => item?.type === "image_board")) {
+                setImageBoard(
+                  "没有收到图片文件；即梦插件这次没有把图片结果返回到 Web 端。",
+                  { state: "error" },
+                  false,
+                );
+              }
+              renderAssistantMessage({
+                ...reply,
+                role: "assistant",
+                content: assistantContent,
+                attachments: assistantAttachments,
+              });
+              return false;
+            } else if (event.type === "error") {
+              const reply = data.reply || {
+                id: `error-${Date.now()}`,
+                role: "assistant",
+                content: data.message || "消息没有发送成功。请检查 AstrBot/WebUI 服务状态后再试。",
+                created_at: new Date().toISOString(),
+              };
+              replaceLocalMessage(
+                assistantNode?.dataset.messageId || pendingId,
+                reply,
+              );
+              return false;
+            }
+            return true;
+          });
+          if (finalConversationId && finalConversationId !== submittedConversationId) {
+            state.activeConversationId = finalConversationId;
+            await loadConversations();
+          } else {
+            renderConversationList();
+          }
+        } catch (error) {
+          console.error(error);
+          replaceLocalMessage(assistantNode?.dataset.messageId || pendingId, {
+            id: `error-${Date.now()}`,
+            role: "assistant",
+            content: "消息没有发送成功。请检查 AstrBot/WebUI 服务状态后再试。",
+            created_at: new Date().toISOString(),
+          });
+        } finally {
+          state.busy = false;
+          updateUiState();
+        }
+      }
+
+      function autosizeInput() {
+        els.input.style.height = "auto";
+        els.input.style.height = `${Math.min(180, els.input.scrollHeight)}px`;
+      }
+
+      function applyAccount(me) {
+        const employee = me.employee || {};
+        const name = employee.display_name || me.user?.name || "飞书员工";
+        els.accountAvatar.textContent = "我";
+        els.accountName.textContent = name;
+        els.accountMeta.textContent = employee.department
+          ? `${employee.department} · ${roleLabel(employee.role)}`
+          : roleLabel(employee.role) || me.auth_status || "飞书 OAuth";
+      }
+
+      function redirectToLogin() {
+        const next = encodeURIComponent("/agent.html");
+        window.location.href = `/api/auth/feishu/start?app=agent&next=${next}`;
+      }
+
+      async function boot() {
+        try {
+          const me = await loadMe();
+          if (!me.logged_in) {
+            setStatus("未登录", "warn");
+            els.loginLink.hidden = false;
+            els.accountAvatar.textContent = "DC";
+            els.accountName.textContent = "未登录";
+            els.accountMeta.textContent = "飞书 OAuth";
+            state.conversations = [];
+            renderConversationList();
+            renderHero("login");
+            updateUiState();
+            return;
+          }
+
+          applyAccount(me);
+          if (!me.allowed) {
+            setStatus(me.auth_status || "待启用", "warn");
+            els.loginLink.hidden = false;
+            renderConversationList();
+            renderHero("pending");
+            updateUiState();
+            return;
+          }
+
+          setStatus("已验证", "ok");
+          els.loginLink.hidden = true;
+          await loadConversations();
+          await loadMessages();
+        } catch {
+          setStatus("连接异常", "warn");
+          renderHero("login");
+          updateUiState();
+        }
+      }
+
+      els.composer.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const content = els.input.value.trim();
+        if (!content || state.busy) return;
+        if (!state.me?.logged_in) {
+          state.draftBeforeLogin = content;
+          redirectToLogin();
+          return;
+        }
+        if (!state.me?.allowed) {
+          renderHero("pending");
+          return;
+        }
+        els.input.value = "";
+        autosizeInput();
+        await sendMessage(content);
+      });
+
+      els.input.addEventListener("input", autosizeInput);
+      els.input.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" && !event.shiftKey) {
+          event.preventDefault();
+          els.composer.requestSubmit();
+        }
+      });
+      els.newChat.addEventListener("click", () => {
+        state.activeConversationId = "dc-agent";
+        renderConversationList();
+        updateUiState();
+        renderHero(state.me?.logged_in ? "ready" : "login");
+        els.input.focus();
+      });
+
+      boot();
+    </script>
+  </body>
+</html>

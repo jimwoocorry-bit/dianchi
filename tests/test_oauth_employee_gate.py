@@ -26,6 +26,17 @@ IDENTITY = {
     "feishu_union_id": "on_1",
     "feishu_user_id": "u_1",
 }
+PERMISSIONS = [
+    {
+        "subject_id": "ou_1",
+        "subject_type": "user",
+        "permission": "dc_admin",
+        "scope": "*",
+        "source": "manual",
+        "enabled": True,
+        "updated_at": "2026-07-15T00:00:00+00:00",
+    }
+]
 PUBLIC_USER = {
     "name": "Employee One",
     "open_id": "ou_1",
@@ -71,6 +82,20 @@ class OAuthEmployeeGateTests(unittest.TestCase):
                 },
             ),
             mock.patch.object(
+                callback,
+                "consume_oauth_transaction",
+                return_value={
+                    "state": "state-1",
+                    "purpose": "employee_login",
+                    "app": "agent",
+                    "next": "/desktop.html",
+                    "return_to": "",
+                    "nonce": "nonce",
+                    "iat": 1000,
+                    "exp": 1600,
+                },
+            ),
+            mock.patch.object(
                 callback, "exchange_code", return_value={"access_token": "x"}
             ),
             mock.patch.object(callback, "fetch_user_info", return_value=PUBLIC_USER),
@@ -100,6 +125,7 @@ class OAuthEmployeeGateTests(unittest.TestCase):
                 "reason": "ok",
                 "employee": ACTIVE_EMPLOYEE,
                 "identity": IDENTITY,
+                "permissions": PERMISSIONS,
             }
         )
 
@@ -112,16 +138,18 @@ class OAuthEmployeeGateTests(unittest.TestCase):
             )
         )
 
-    def test_rejected_identity_receives_403_without_session_cookie(self) -> None:
+    def test_rejected_identity_and_service_failures_are_distinguished(self) -> None:
         decisions = {
-            "employee_not_found": "不是公司内部员工",
-            "status_pending": "员工账号尚未启用",
-            "status_disabled": "员工账号已停用",
-            "tenant_mismatch": "不是公司内部员工",
-            "snapshot_missing": "员工身份服务暂不可用",
-            "authorization_unavailable": "员工身份服务暂不可用",
+            "employee_not_found": (403, "员工账号未获授权"),
+            "status_pending": (403, "员工账号尚未启用"),
+            "status_disabled": (403, "员工账号已停用"),
+            "tenant_mismatch": (403, "不属于公司租户"),
+            "snapshot_missing": (503, "员工授权快照尚未同步"),
+            "snapshot_invalid": (503, "员工授权数据校验失败"),
+            "snapshot_stale": (503, "员工授权数据超过安全时限"),
+            "authorization_unavailable": (503, "员工授权存储当前不可达"),
         }
-        for reason, message in decisions.items():
+        for reason, (status, message) in decisions.items():
             with self.subTest(reason=reason):
                 response = self.run_callback(
                     {
@@ -132,8 +160,9 @@ class OAuthEmployeeGateTests(unittest.TestCase):
                     }
                 )
 
-                self.assertEqual(response.status, 403)
+                self.assertEqual(response.status, status)
                 self.assertIn(message, response.wfile.getvalue().decode("utf-8"))
+                self.assertIn(reason, response.wfile.getvalue().decode("utf-8"))
                 self.assertFalse(
                     any(
                         value.startswith("dc_feishu_session=")
@@ -154,6 +183,7 @@ class OAuthEmployeeGateTests(unittest.TestCase):
             "reason": "status_disabled",
             "employee": {**ACTIVE_EMPLOYEE, "status": "disabled"},
             "identity": IDENTITY,
+            "permissions": PERMISSIONS,
         }
         with (
             mock.patch.object(_admin, "cookie_value", return_value="session"),
@@ -176,6 +206,18 @@ class OAuthEmployeeGateTests(unittest.TestCase):
         resolver.assert_called_once_with(
             signed_payload["user"],
             expected_tenant="tenant_company",
+        )
+
+    def test_admin_role_and_legacy_open_id_do_not_bypass_permission_store(self) -> None:
+        legacy_admin = {**PUBLIC_USER, "employee_role": "admin"}
+
+        self.assertFalse(_admin.is_admin(legacy_admin, []))
+        self.assertTrue(_admin.is_admin(PUBLIC_USER, PERMISSIONS))
+        self.assertFalse(
+            _admin.is_admin(
+                PUBLIC_USER,
+                [{**PERMISSIONS[0], "scope": "AI应用部"}],
+            )
         )
 
 

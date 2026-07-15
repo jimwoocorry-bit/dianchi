@@ -24,8 +24,21 @@ from api._desktop_release import (
     store_release_manifest,
     verify_release_sync,
 )
+from api._feishu import (
+    DESKTOP_BOOTSTRAP_COOKIE,
+    DESKTOP_BOOTSTRAP_MAX_AGE,
+    clear_cookie_header,
+)
+from api._oauth_connector import (
+    OAuthConnectorError,
+    check_cloud_docs_grant,
+    exchange_cloud_docs_handoff,
+    refresh_cloud_docs_grant,
+    revoke_cloud_docs_grant,
+)
 from api._employee_access import (
     EmployeeAccessError,
+    snapshot_health,
     store_snapshot,
     verify_snapshot_sync,
 )
@@ -45,6 +58,8 @@ class handler(BaseHTTPRequestHandler):
             self._latest_release()
         elif route == "probe-status":
             self._probe_status()
+        elif route == "employee-health":
+            write_json(self, HTTPStatus.OK, snapshot_health())
         else:
             write_json(self, HTTPStatus.NOT_FOUND, {"error": "route_not_found"})
 
@@ -62,6 +77,14 @@ class handler(BaseHTTPRequestHandler):
             self._release_sync()
         elif route == "employee-sync":
             self._employee_sync()
+        elif route == "oauth-handoff-exchange":
+            self._oauth_handoff_exchange()
+        elif route == "oauth-grant-check":
+            self._oauth_grant_check()
+        elif route == "oauth-grant-refresh":
+            self._oauth_grant_refresh()
+        elif route == "oauth-grant-revoke":
+            self._oauth_grant_revoke()
         else:
             write_json(self, HTTPStatus.NOT_FOUND, {"error": "route_not_found"})
 
@@ -94,9 +117,16 @@ class handler(BaseHTTPRequestHandler):
         return payload
 
     def _open_desktop(self) -> None:
-        auth = resolve_auth(self.headers)
+        auth = resolve_auth(
+            self.headers,
+            cookie_name=DESKTOP_BOOTSTRAP_COOKIE,
+            max_age=DESKTOP_BOOTSTRAP_MAX_AGE,
+        )
         if not auth["logged_in"]:
-            self._redirect("/api/auth/feishu/start?app=agent&next=/desktop.html")
+            self._redirect(
+                "/api/auth/feishu/start?app=agent&purpose=desktop_login"
+                "&next=/api/desktop/open"
+            )
             return
         if not auth["allowed"]:
             reason = urllib.parse.quote(str(auth["auth_status"]), safe="")
@@ -106,7 +136,10 @@ class handler(BaseHTTPRequestHandler):
         user = auth["user"]
         open_id = (user or {}).get("open_id") or ""
         if not open_id:
-            self._redirect("/api/auth/feishu/start?app=agent&next=/desktop.html")
+            self._redirect(
+                "/api/auth/feishu/start?app=agent&purpose=desktop_login"
+                "&next=/api/desktop/open"
+            )
             return
         if not _wallet.is_activated(open_id):
             _wallet.create_wallet(open_id)
@@ -117,7 +150,72 @@ class handler(BaseHTTPRequestHandler):
         except RuntimeError:
             self._redirect("/desktop.html?auth=authorization_unavailable")
             return
-        self._redirect(desktop_authorize_url(code))
+        self._redirect(
+            desktop_authorize_url(code),
+            clear_cookie=DESKTOP_BOOTSTRAP_COOKIE,
+        )
+
+    def _oauth_handoff_exchange(self) -> None:
+        payload = self._read_json(8 * 1024)
+        if payload is None:
+            return
+        self._oauth_result(
+            lambda: exchange_cloud_docs_handoff(str(payload.get("code") or ""))
+        )
+
+    def _oauth_grant_check(self) -> None:
+        payload = self._read_json(8 * 1024)
+        if payload is None:
+            return
+        self._oauth_result(
+            lambda: check_cloud_docs_grant(str(payload.get("grant_token") or ""))
+        )
+
+    def _oauth_grant_refresh(self) -> None:
+        payload = self._read_json(8 * 1024)
+        if payload is None:
+            return
+        self._oauth_result(
+            lambda: refresh_cloud_docs_grant(str(payload.get("grant_token") or ""))
+        )
+
+    def _oauth_grant_revoke(self) -> None:
+        payload = self._read_json(8 * 1024)
+        if payload is None:
+            return
+        self._oauth_result(
+            lambda: {
+                "revoked": revoke_cloud_docs_grant(
+                    str(payload.get("grant_token") or "")
+                )
+            }
+        )
+
+    def _oauth_result(self, operation) -> None:
+        try:
+            result = operation()
+        except OAuthConnectorError as exc:
+            if exc.code.startswith("status_") or exc.code in {
+                "employee_identity_mismatch",
+                "employee_not_allowed",
+            }:
+                status = HTTPStatus.FORBIDDEN
+            elif exc.code.endswith("_failed"):
+                status = HTTPStatus.SERVICE_UNAVAILABLE
+            elif exc.code.endswith("_reauth_required"):
+                status = HTTPStatus.UNAUTHORIZED
+            else:
+                status = HTTPStatus.BAD_REQUEST
+            write_json(self, status, {"error": exc.code})
+            return
+        except RuntimeError:
+            write_json(
+                self,
+                HTTPStatus.SERVICE_UNAVAILABLE,
+                {"error": "oauth_connector_unavailable"},
+            )
+            return
+        write_json(self, HTTPStatus.OK, {"ok": True, **result})
 
     def _latest_release(self) -> None:
         if require_login(self) is None:
@@ -158,8 +256,7 @@ class handler(BaseHTTPRequestHandler):
             status = (
                 HTTPStatus.FORBIDDEN
                 if exc.code.startswith("status_")
-                or exc.code
-                in {"employee_not_allowed", "employee_identity_mismatch"}
+                or exc.code in {"employee_not_allowed", "employee_identity_mismatch"}
                 else HTTPStatus.BAD_REQUEST
             )
             write_json(self, status, {"error": exc.code})
@@ -186,8 +283,7 @@ class handler(BaseHTTPRequestHandler):
             status = (
                 HTTPStatus.FORBIDDEN
                 if exc.code.startswith("status_")
-                or exc.code
-                in {"employee_not_allowed", "employee_identity_mismatch"}
+                or exc.code in {"employee_not_allowed", "employee_identity_mismatch"}
                 else HTTPStatus.BAD_REQUEST
             )
             write_json(self, status, {"error": exc.code})
@@ -296,7 +392,7 @@ class handler(BaseHTTPRequestHandler):
                 self.headers.get("X-Dianchi-Signature", ""),
                 os.environ.get("DESKTOP_EMPLOYEE_SYNC_SECRET", "").strip(),
             )
-            store_snapshot(snapshot)
+            store_result = store_snapshot(snapshot)
         except EmployeeAccessError as exc:
             status = (
                 HTTPStatus.UNAUTHORIZED
@@ -320,11 +416,14 @@ class handler(BaseHTTPRequestHandler):
                 "version": snapshot["schema_version"],
                 "count": len(snapshot["records"]),
                 "digest": snapshot["digest"],
+                "store_result": store_result,
             },
         )
 
-    def _redirect(self, location: str) -> None:
+    def _redirect(self, location: str, *, clear_cookie: str = "") -> None:
         self.send_response(HTTPStatus.FOUND)
+        if clear_cookie:
+            self.send_header("Set-Cookie", clear_cookie_header(clear_cookie))
         self.send_header("Location", location)
         self.end_headers()
 

@@ -14,11 +14,24 @@ from http.cookies import SimpleCookie
 FEISHU_AUTHORIZE_URL = "https://accounts.feishu.cn/open-apis/authen/v1/authorize"
 FEISHU_TOKEN_URL = "https://open.feishu.cn/open-apis/authen/v2/oauth/token"
 FEISHU_USER_INFO_URL = "https://open.feishu.cn/open-apis/authen/v1/user_info"
+FEISHU_REVOKE_URL = "https://accounts.feishu.cn/oauth/v1/revoke"
 
 STATE_COOKIE = "dc_feishu_oauth_state"
 SESSION_COOKIE = "dc_feishu_session"
+DESKTOP_BOOTSTRAP_COOKIE = "dc_feishu_desktop_bootstrap"
 SESSION_MAX_AGE = 8 * 60 * 60
+DESKTOP_BOOTSTRAP_MAX_AGE = 10 * 60
 STATE_MAX_AGE = 10 * 60
+
+
+class FeishuRequestError(RuntimeError):
+    """Represent a classified Feishu request failure."""
+
+    def __init__(self, code: str, *, retryable: bool) -> None:
+        """Initialize a machine-readable Feishu failure classification."""
+        super().__init__(code)
+        self.code = code
+        self.retryable = retryable
 
 
 def env(name: str, fallback: str = "") -> str:
@@ -73,10 +86,7 @@ def cookie_value(cookie_header: str | None, name: str) -> str | None:
 
 
 def set_cookie_header(name: str, value: str, *, max_age: int) -> str:
-    return (
-        f"{name}={value}; Path=/; Max-Age={max_age}; "
-        "HttpOnly; SameSite=Lax; Secure"
-    )
+    return f"{name}={value}; Path=/; Max-Age={max_age}; HttpOnly; SameSite=Lax; Secure"
 
 
 def clear_cookie_header(name: str) -> str:
@@ -107,7 +117,19 @@ def feishu_config(app_key: str | None = None) -> tuple[str, str, str, str]:
     return key, app_id, app_secret, scope
 
 
-def request_json(url: str, *, method: str, headers: dict, body: dict | None = None) -> dict:
+def oauth_scope(app_key: str | None, purpose: str) -> str:
+    """Return a purpose-specific OAuth scope without sharing token purposes."""
+    if purpose == "cloud_docs":
+        return env(
+            "FEISHU_CLOUD_DOC_SCOPE",
+            "offline_access drive:drive:readonly",
+        )
+    return feishu_config(app_key)[3]
+
+
+def request_json(
+    url: str, *, method: str, headers: dict, body: dict | None = None
+) -> dict:
     data = None
     if body is not None:
         data = json.dumps(body).encode("utf-8")
@@ -115,14 +137,29 @@ def request_json(url: str, *, method: str, headers: dict, body: dict | None = No
     req = urllib.request.Request(url, data=data, headers=headers, method=method)
     try:
         with urllib.request.urlopen(req, timeout=12) as resp:
-            return json.loads(resp.read().decode("utf-8"))
+            raw = resp.read().decode("utf-8")
+        return json.loads(raw)
     except urllib.error.HTTPError as exc:
-        raw = exc.read().decode("utf-8", errors="replace")
-        raise RuntimeError(f"Feishu HTTP {exc.code}: {raw}") from exc
+        exc.read()
+        raise FeishuRequestError(
+            f"feishu_http_{exc.code}",
+            retryable=exc.code == 429 or exc.code >= 500,
+        ) from exc
+    except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
+        raise FeishuRequestError(
+            "feishu_transport_or_response_error",
+            retryable=True,
+        ) from exc
 
 
-def exchange_code(code: str, redirect_uri: str, app_key: str | None = None) -> dict:
-    _key, app_id, app_secret, scope = feishu_config(app_key)
+def exchange_code(
+    code: str,
+    redirect_uri: str,
+    app_key: str | None = None,
+    *,
+    scope: str | None = None,
+) -> dict:
+    _key, app_id, app_secret, configured_scope = feishu_config(app_key)
     payload = {
         "grant_type": "authorization_code",
         "client_id": app_id,
@@ -130,8 +167,9 @@ def exchange_code(code: str, redirect_uri: str, app_key: str | None = None) -> d
         "code": code,
         "redirect_uri": redirect_uri,
     }
-    if scope:
-        payload["scope"] = scope
+    requested_scope = scope if scope is not None else configured_scope
+    if requested_scope:
+        payload["scope"] = requested_scope
     result = request_json(FEISHU_TOKEN_URL, method="POST", headers={}, body=payload)
     if result.get("code") not in (0, None):
         raise RuntimeError(f"Feishu token error: {result}")
@@ -140,6 +178,82 @@ def exchange_code(code: str, redirect_uri: str, app_key: str | None = None) -> d
     if not access_token:
         raise RuntimeError(f"Feishu token response missing access_token: {result}")
     return data
+
+
+def refresh_user_token(refresh_token: str, app_key: str | None = None) -> dict:
+    """Rotate a Feishu OAuth v2 refresh token.
+
+    Args:
+        refresh_token: Current one-time Feishu refresh token.
+        app_key: Application credential namespace that issued the token.
+
+    Returns:
+        New access token and rotated refresh token response.
+    """
+    _key, app_id, app_secret, _scope = feishu_config(app_key)
+    result = request_json(
+        FEISHU_TOKEN_URL,
+        method="POST",
+        headers={},
+        body={
+            "grant_type": "refresh_token",
+            "client_id": app_id,
+            "client_secret": app_secret,
+            "refresh_token": refresh_token,
+        },
+    )
+    if result.get("code") not in (0, None):
+        raise FeishuRequestError(
+            f"feishu_token_rejected_{result.get('code')}",
+            retryable=False,
+        )
+    data = result.get("data") or result
+    if not data.get("access_token") or not data.get("refresh_token"):
+        raise FeishuRequestError(
+            "feishu_token_response_incomplete",
+            retryable=False,
+        )
+    return data
+
+
+def revoke_user_token(
+    token: str,
+    app_key: str | None = None,
+    *,
+    token_type_hint: str,
+) -> None:
+    """Revoke a Feishu user access or refresh token through RFC 7009.
+
+    Args:
+        token: Token value to revoke.
+        app_key: Application credential namespace that issued the token.
+        token_type_hint: ``access_token`` or ``refresh_token``.
+    """
+    if token_type_hint not in {"access_token", "refresh_token"}:
+        raise ValueError("invalid Feishu token type hint")
+    _key, app_id, app_secret, _scope = feishu_config(app_key)
+    body = urllib.parse.urlencode(
+        {
+            "token": token,
+            "client_id": app_id,
+            "client_secret": app_secret,
+            "token_type_hint": token_type_hint,
+        }
+    ).encode("utf-8")
+    request = urllib.request.Request(
+        FEISHU_REVOKE_URL,
+        data=body,
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=12):
+            return
+    except urllib.error.HTTPError as exc:
+        raw = exc.read().decode("utf-8", errors="replace")
+        raise RuntimeError(f"Feishu token revoke HTTP {exc.code}: {raw}") from exc
+    except (urllib.error.URLError, TimeoutError) as exc:
+        raise RuntimeError("Feishu token revoke transport error") from exc
 
 
 def fetch_user_info(access_token: str) -> dict:

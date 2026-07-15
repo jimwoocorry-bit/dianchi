@@ -11,7 +11,9 @@ from unittest import mock
 from api import _kv
 from api._employee_access import (
     EmployeeAccessError,
+    has_permission,
     resolve_employee,
+    snapshot_health,
     snapshot_digest,
     store_snapshot,
     verify_snapshot_sync,
@@ -46,7 +48,109 @@ def snapshot_for(
     }
 
 
+def snapshot_v2_for(
+    *,
+    status: str = "active",
+    generated_at: str | None = None,
+) -> dict:
+    identities = [
+        {
+            "app_key": "agent",
+            "provider": "feishu:agent",
+            "provider_subject": "ou_agent",
+            "tenant_key": "tenant_company",
+            "feishu_open_id": "ou_agent",
+            "feishu_union_id": "on_1",
+            "feishu_user_id": "u_1",
+        },
+        {
+            "app_key": "promo",
+            "provider": "feishu:promo",
+            "provider_subject": "ou_promo",
+            "tenant_key": "tenant_company",
+            "feishu_open_id": "ou_promo",
+            "feishu_union_id": "on_1",
+            "feishu_user_id": "u_1",
+        },
+    ]
+    permissions = [
+        {
+            "subject_id": "ou_agent",
+            "subject_type": "user",
+            "permission": "dc_admin",
+            "scope": "*",
+            "source": "manual",
+            "enabled": True,
+            "updated_at": "2026-07-15T00:00:00+00:00",
+        },
+        {
+            "subject_id": "ou_agent",
+            "subject_type": "user",
+            "permission": "office_ops",
+            "scope": "AI应用部",
+            "source": "manual",
+            "enabled": False,
+            "updated_at": "2026-07-15T00:00:00+00:00",
+        },
+    ]
+    records = [
+        {
+            "employee_id": "emp_1",
+            "display_name": "Employee One",
+            "department": "AI应用部",
+            "title": "负责人",
+            "role": "admin",
+            "status": status,
+            "relation_type": "manager",
+            "tenant_key": "tenant_company",
+            "feishu_open_id": "ou_agent",
+            "feishu_union_id": "on_1",
+            "feishu_user_id": "u_1",
+            "principal_key": "feishu:tenant_company:union:on_1",
+            "identities": identities,
+            "permissions": permissions,
+        }
+    ]
+    return {
+        "schema_version": 2,
+        "snapshot_id": "snap_test",
+        "generated_at": generated_at or datetime.now(UTC).isoformat(),
+        "sync_reason": "manual_recovery",
+        "records": records,
+        "stats": {
+            "record_count": 1,
+            "identity_count": 2,
+            "identity_fallback_count": 0,
+            "permission_count": 2,
+            "unbound_permission_count": 0,
+        },
+        "digest": snapshot_digest(records),
+    }
+
+
 class EmployeeAccessTests(unittest.TestCase):
+    def test_v2_resolves_cross_app_identity_and_company_permissions(self) -> None:
+        result = resolve_employee(
+            {
+                "tenant_key": "tenant_company",
+                "union_id": "on_1",
+                "open_id": "ou_promo",
+            },
+            snapshot=snapshot_v2_for(),
+            expected_tenant="tenant_company",
+        )
+
+        self.assertTrue(result["allowed"])
+        self.assertEqual(
+            result["employee"]["principal_key"],
+            "feishu:tenant_company:union:on_1",
+        )
+        self.assertEqual(result["identity"]["app_key"], "promo")
+        self.assertTrue(has_permission(result["permissions"], "dc_admin"))
+        self.assertFalse(
+            has_permission(result["permissions"], "office_ops", scope="AI应用部")
+        )
+
     def test_resolves_active_employee_by_feishu_identity(self) -> None:
         result = resolve_employee(
             {
@@ -94,7 +198,7 @@ class EmployeeAccessTests(unittest.TestCase):
 
     def test_rejects_stale_or_unsupported_snapshot(self) -> None:
         stale = snapshot_for(
-            generated_at=(datetime.now(UTC) - timedelta(hours=25)).isoformat()
+            generated_at=(datetime.now(UTC) - timedelta(hours=31)).isoformat()
         )
         unsupported = snapshot_for()
         unsupported["schema_version"] = 2
@@ -154,6 +258,43 @@ class EmployeeAccessTests(unittest.TestCase):
         with mock.patch.dict(os.environ, {}, clear=True):
             with self.assertRaisesRegex(RuntimeError, "KV REST API"):
                 store_snapshot(snapshot_for())
+
+    def test_snapshot_health_distinguishes_healthy_delayed_and_stale(self) -> None:
+        healthy = snapshot_health(snapshot_v2_for())
+        delayed = snapshot_health(
+            snapshot_v2_for(
+                generated_at=(datetime.now(UTC) - timedelta(hours=25)).isoformat()
+            )
+        )
+        stale = snapshot_health(
+            snapshot_v2_for(
+                generated_at=(datetime.now(UTC) - timedelta(hours=31)).isoformat()
+            )
+        )
+
+        self.assertEqual(healthy["status"], "healthy")
+        self.assertEqual(healthy["permission_count"], 2)
+        self.assertEqual(delayed["status"], "degraded")
+        self.assertEqual(delayed["reason"], "snapshot_delayed")
+        self.assertEqual(stale["status"], "unavailable")
+        self.assertEqual(stale["reason"], "snapshot_stale")
+
+    def test_store_snapshot_rejects_rollback_and_accepts_idempotent_replay(
+        self,
+    ) -> None:
+        current = snapshot_v2_for()
+        older = snapshot_v2_for(
+            generated_at=(datetime.now(UTC) - timedelta(minutes=1)).isoformat()
+        )
+        with (
+            mock.patch.object(_kv, "get_value", return_value=json.dumps(current)),
+            mock.patch.object(_kv, "set_value") as setter,
+        ):
+            self.assertEqual(store_snapshot(current), "unchanged")
+            with self.assertRaisesRegex(EmployeeAccessError, "out_of_order"):
+                store_snapshot(older)
+
+        setter.assert_not_called()
 
 
 class StrictKvTests(unittest.TestCase):

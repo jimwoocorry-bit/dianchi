@@ -26,9 +26,7 @@ class VercelFunctionBudgetTests(unittest.TestCase):
 
     def test_desktop_routes_share_one_vercel_function(self) -> None:
         config = json.loads(Path("vercel.json").read_text(encoding="utf-8"))
-        rewrites = {
-            item["source"]: item["destination"] for item in config["rewrites"]
-        }
+        rewrites = {item["source"]: item["destination"] for item in config["rewrites"]}
         expected = {
             "/api/desktop/exchange": "/api/desktop?route=exchange",
             "/api/desktop/latest": "/api/desktop?route=latest",
@@ -38,9 +36,16 @@ class VercelFunctionBudgetTests(unittest.TestCase):
             "/api/desktop/probe/heartbeat": "/api/desktop?route=probe-heartbeat",
             "/api/desktop/refresh": "/api/desktop?route=refresh",
             "/api/internal/desktop/release": "/api/desktop?route=release-sync",
-            "/api/internal/employee-access/sync": (
-                "/api/desktop?route=employee-sync"
+            "/api/internal/employee-access/sync": ("/api/desktop?route=employee-sync"),
+            "/api/internal/employee-access/health": (
+                "/api/desktop?route=employee-health"
             ),
+            "/api/oauth/handoff/exchange": (
+                "/api/desktop?route=oauth-handoff-exchange"
+            ),
+            "/api/oauth/grant/check": "/api/desktop?route=oauth-grant-check",
+            "/api/oauth/grant/refresh": ("/api/desktop?route=oauth-grant-refresh"),
+            "/api/oauth/grant/revoke": "/api/desktop?route=oauth-grant-revoke",
         }
 
         self.assertEqual({route: rewrites.get(route) for route in expected}, expected)

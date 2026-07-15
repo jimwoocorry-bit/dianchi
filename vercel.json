@@ -37,6 +37,26 @@
       "destination": "/api/desktop?route=employee-sync"
     },
     {
+      "source": "/api/internal/employee-access/health",
+      "destination": "/api/desktop?route=employee-health"
+    },
+    {
+      "source": "/api/oauth/handoff/exchange",
+      "destination": "/api/desktop?route=oauth-handoff-exchange"
+    },
+    {
+      "source": "/api/oauth/grant/check",
+      "destination": "/api/desktop?route=oauth-grant-check"
+    },
+    {
+      "source": "/api/oauth/grant/refresh",
+      "destination": "/api/desktop?route=oauth-grant-refresh"
+    },
+    {
+      "source": "/api/oauth/grant/revoke",
+      "destination": "/api/desktop?route=oauth-grant-revoke"
+    },
+    {
       "source": "/auth/feishu/start",
       "destination": "/api/auth/feishu/start"
     },
@@ -51,6 +71,10 @@
     {
       "source": "/admin",
       "destination": "/admin.html"
+    },
+    {
+      "source": "/agent",
+      "destination": "/agent.html"
     },
     {
       "source": "/workspace",

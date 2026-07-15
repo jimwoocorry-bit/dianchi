@@ -66,9 +66,12 @@ def issue_desktop_binding_assertion(
     """
     employee_id = str(employee.get("employee_id") or "").strip()
     feishu_open_id = str(identity.get("feishu_open_id") or "").strip()
-    desktop_session_id = "desktop_" + hashlib.sha256(
-        f"{employee_id}:{installation_id}".encode("utf-8")
-    ).hexdigest()[:32]
+    desktop_session_id = (
+        "desktop_"
+        + hashlib.sha256(
+            f"{employee_id}:{installation_id}".encode("utf-8")
+        ).hexdigest()[:32]
+    )
     secret = env("DESKTOP_BINDING_SECRET")
     if not secret or not employee_id or not feishu_open_id or not installation_id:
         return {
@@ -85,16 +88,22 @@ def issue_desktop_binding_assertion(
         "iat": now,
         "exp": now + BINDING_ASSERTION_TTL_SECONDS,
     }
-    body = base64.urlsafe_b64encode(
-        _canonical_json(payload).encode("utf-8")
-    ).rstrip(b"=").decode("ascii")
-    signature = base64.urlsafe_b64encode(
-        hmac.new(
-            secret.encode("utf-8"),
-            body.encode("ascii"),
-            hashlib.sha256,
-        ).digest()
-    ).rstrip(b"=").decode("ascii")
+    body = (
+        base64.urlsafe_b64encode(_canonical_json(payload).encode("utf-8"))
+        .rstrip(b"=")
+        .decode("ascii")
+    )
+    signature = (
+        base64.urlsafe_b64encode(
+            hmac.new(
+                secret.encode("utf-8"),
+                body.encode("ascii"),
+                hashlib.sha256,
+            ).digest()
+        )
+        .rstrip(b"=")
+        .decode("ascii")
+    )
     return {
         "desktop_session_id": desktop_session_id,
         "desktop_assertion": f"{body}.{signature}",
@@ -180,6 +189,7 @@ def exchange_handoff(code: str, *, installation_id: str) -> dict[str, Any]:
         raise DesktopAuthError(resolved.get("reason", "employee_not_allowed"))
     employee = resolved["employee"]
     identity = resolved["identity"]
+    permissions = resolved.get("permissions") or []
     if employee.get("employee_id") != record.get("employee_id"):
         raise DesktopAuthError("employee_identity_mismatch")
 
@@ -195,6 +205,8 @@ def exchange_handoff(code: str, *, installation_id: str) -> dict[str, Any]:
             "user": user,
             "employee": employee,
             "identity": identity,
+            "permissions": permissions,
+            "session_purpose": "desktop_login",
             "auth_status": "ok",
             "iat": now,
             "exp": now + SESSION_MAX_AGE,
@@ -225,6 +237,7 @@ def exchange_handoff(code: str, *, installation_id: str) -> dict[str, Any]:
         "refresh_token": refresh_token,
         "employee": employee,
         "identity": identity,
+        "permissions": permissions,
         "pet_api_url": env("DESKTOP_PET_API_URL"),
         **binding,
     }
@@ -273,6 +286,7 @@ def rotate_refresh(refresh_token: str, *, installation_id: str) -> dict[str, Any
         raise DesktopAuthError(resolved.get("reason", "employee_not_allowed"))
     employee = resolved["employee"]
     identity = resolved["identity"]
+    permissions = resolved.get("permissions") or []
     if employee.get("employee_id") != record.get("employee_id"):
         raise DesktopAuthError("employee_identity_mismatch")
 
@@ -288,6 +302,8 @@ def rotate_refresh(refresh_token: str, *, installation_id: str) -> dict[str, Any
             "user": user,
             "employee": employee,
             "identity": identity,
+            "permissions": permissions,
+            "session_purpose": "desktop_login",
             "auth_status": "ok",
             "iat": now,
             "exp": now + SESSION_MAX_AGE,
@@ -318,6 +334,7 @@ def rotate_refresh(refresh_token: str, *, installation_id: str) -> dict[str, Any
         "refresh_token": new_refresh_token,
         "employee": employee,
         "identity": identity,
+        "permissions": permissions,
         "pet_api_url": env("DESKTOP_PET_API_URL"),
         **binding,
     }
