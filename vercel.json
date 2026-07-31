@@ -9,7 +9,7 @@
           "value": "workbench.gx-dianchi.cn"
         }
       ],
-      "destination": "http://8.134.174.169:8080/:path*"
+      "destination": "https://architectural-enjoying-configure-achieve.trycloudflare.com/:path*"
     },
     {
       "source": "/api/desktop/exchange",
