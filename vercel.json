@@ -1,6 +1,17 @@
 {
   "rewrites": [
     {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "header",
+          "key": "host",
+          "value": "workbench.gx-dianchi.cn"
+        }
+      ],
+      "destination": "http://8.134.174.169:8080/:path*"
+    },
+    {
       "source": "/api/desktop/exchange",
       "destination": "/api/desktop?route=exchange"
     },
